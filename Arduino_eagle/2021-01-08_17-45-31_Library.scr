@@ -1,0 +1,100 @@
+# Created by Ultra Librarian Gold 8.3.283 Copyright © 1999-2018
+# Frank Frank, Accelerated Designs
+
+Grid mil;
+Set Wire_Bend 2;
+
+
+Edit 'RELAY_G6DN-1A_OMR.pac';
+Change Drill 43;
+Pad '8' Round 0 63 R180 (0 -700);
+Change Drill 43;
+Pad '5' Round 0 63 R180 (0 -400);
+Change Drill 43;
+Pad '2' Round 0 63 R180 (0 -100);
+Change Drill 43;
+Pad '1' Round 0 63 R0 (0 0);
+Layer 21;
+Wire 6 (-153 -757) (55 -757);
+Wire 6 (55 -757) (55 39);
+Wire 6 (55 39) (21 39);
+Wire 6 (-153 39) (-153 -757);
+Wire 6 (-21 39) (-153 39);
+Change Size 50;
+Change Ratio 6;
+Text '*' SR0 (-23 120);
+Change Size 50;
+Change Ratio 6;
+Text '>Value' SR0 (-117 -384);
+Layer 51;
+Wire 6 (-148 -752) (50 -752);
+Wire 6 (50 -752) (50 34);
+Wire 6 (50 34) (-148 34);
+Wire 6 (-148 34) (-148 -752);
+Wire 0 (-67 0) -180 (-67 0);
+Wire 0 (-67 0) -180 (-67 0);
+Wire 6 (-37 34) -180 (-61 34);
+Change Size 50;
+Change Ratio 6;
+Text '*' SR0 (-23 51);
+Layer 25;
+Change Size 50;
+Change Ratio 6;
+Text '>Name' SR0 (-178 -384);
+Layer 27;
+
+Edit 'RELAY_G6DN-1A.sym';
+Layer 94;
+Pin '1' Pas None Middle R0 Both 0 (100 0)
+Pin '2' Pas None Middle R0 Both 0 (100 -100)
+Pin '5' Pas None Middle R180 Both 0 (1500 -100)
+Pin '8' Pas None Middle R180 Both 0 (1500 0)
+Wire 6 (300 200) (300 -300);
+Wire 6 (300 -300) (1300 -300);
+Wire 6 (1300 -300) (1300 200);
+Wire 6 (1300 200) (300 200);
+Wire 6 (300 0) (500 0);
+Wire 6 (300 -100) (500 -100);
+Wire 6 (500 0) (500 -38);
+Wire 6 (500 -100) (500 -62);
+Wire 6 (462 -38) (538 -38);
+Wire 6 (462 -62) (538 -62);
+Wire 6 (538 -38) (538 -62);
+Wire 6 (462 -38) (462 -62);
+Wire 6 (1300 0) (1025 0);
+Wire 6 (1100 -100) (1300 -100);
+Wire 6 (1100 -100) (1100 -75);
+Wire 6 (1075 -75) (1100 -75);
+Wire 6 (1075 -50) (1075 -100);
+Wire 6 (1050 -75) (1075 -50);
+Wire 6 (1025 0) (975 -100);
+Wire 6 (1050 -75) (1075 -100);
+Change Spacing 50;
+Change Pour solid;
+Polygon 1  (1050 -75) (1075 -50) (1075 -100) (1050 -75);
+Layer 97;
+Layer 95;
+Change Size 82;
+Change Ratio 6;
+Text '>Name' SR0 (614 359);
+Layer 96;
+Change Size 82;
+Change Ratio 6;
+Text '>Value' SR0 (589 259);
+
+Edit 'G6DN-1A_DC5.dev';
+Prefix 'K';
+Description '';
+Value Off;
+Add RELAY_G6DN-1A 'A' Next  0 (0 0);
+Package 'RELAY_G6DN-1A_OMR';
+Technology '';
+Attribute Built_By 'EMA_Justin';
+Attribute Vendor 'Omron';
+Attribute Manufacturer_Part_Number 'G6DN-1A DC5';
+Attribute Copyright 'Copyright (C) 2018 Accelerated Designs. All rights reserved';
+Attribute SourceLibrary 'Omron_2020-03-12';
+Connect 'A.1' '1';
+Connect 'A.2' '2';
+Connect 'A.5' '5';
+Connect 'A.8' '8';

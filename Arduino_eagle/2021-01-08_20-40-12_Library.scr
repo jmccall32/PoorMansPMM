@@ -1,0 +1,77 @@
+# Created by Ultra Librarian Gold 8.3.283 Copyright © 1999-2018
+# Frank Frank, Accelerated Designs
+
+Grid mil;
+Set Wire_Bend 2;
+
+
+Edit 'SW3-TOGGLE-2POL_P100.pac';
+Change Drill 43;
+Pad '1' Round 0 71 R0 (0 0);
+Change Drill 43;
+Pad '2' Round 0 71 R0 (100 0);
+Change Drill 43;
+Pad '3' Round 0 71 R0 (200 0);
+Layer 21;
+Wire 6 (-105 -108) (305 -108);
+Wire 6 (305 -108) (305 108);
+Wire 6 (305 108) (-105 108);
+Wire 6 (-105 108) (-105 -108);
+Change Size 50;
+Change Ratio 6;
+Text '>Value' SR0 (32 -25);
+Layer 51;
+Wire 6 (-100 -103) (300 -103);
+Wire 6 (300 -103) (300 103);
+Wire 6 (300 103) (-100 103);
+Wire 6 (-100 103) (-100 -103);
+Layer 25;
+Change Size 50;
+Change Ratio 6;
+Text '>Name' SR0 (-29 -25);
+Layer 27;
+
+Edit 'SW3-TOGGLE-2POL.sym';
+Layer 94;
+Pin '1' Pas None Middle R0 Pad 0 (100 0)
+Pin '2' Pas None Middle R180 Pad 0 (500 -250)
+Pin '3' Pas None Middle R180 Pad 0 (1700 -125)
+Wire 6 (300 150) (300 -350);
+Wire 6 (300 -350) (1500 -350);
+Wire 6 (1500 -350) (1500 150);
+Wire 6 (1500 150) (300 150);
+Wire 6 (300 0) (650 0);
+Wire 6 (300 -250) (650 -250);
+Wire 6 (1500 -125) (1150 -125);
+Wire 6 (1100 -125) (675 -25);
+Wire 5 (650 0) -180 (700 0);
+Wire 5 (700 0) -180 (650 0);
+Wire 5 (650 -250) -180 (700 -250);
+Wire 5 (700 -250) -180 (650 -250);
+Wire 5 (1150 -125) -180 (1100 -125);
+Wire 5 (1100 -125) -180 (1150 -125);
+Layer 97;
+Layer 95;
+Change Size 82;
+Change Ratio 6;
+Text '>Name' SR0 (714 309);
+Layer 96;
+Change Size 82;
+Change Ratio 6;
+Text '>Value' SR0 (689 209);
+
+Edit '1825097-1.dev';
+Prefix 'U';
+Description '';
+Value Off;
+Add SW3-TOGGLE-2POL 'A' Next  0 (0 0);
+Package 'SW3-TOGGLE-2POL_P100';
+Technology '';
+Attribute Vendor 'TE Connectivity';
+Attribute Manufacturer_Part_Number '1825097-1';
+Attribute Built_By 'EMA_UL_Team';
+Attribute Copyright 'Copyright (C) 2016 Accelerated Designs. All rights reserved';
+Attribute SourceLibrary 'Tyco_2012-1-03';
+Connect 'A.1' '1';
+Connect 'A.3' '2';
+Connect 'A.2' '3';

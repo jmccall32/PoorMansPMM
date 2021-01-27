@@ -1,0 +1,131 @@
+# Created by Ultra Librarian Gold 8.3.283 Copyright © 1999-2018
+# Frank Frank, Accelerated Designs
+
+Grid mil;
+Set Wire_Bend 2;
+
+
+Edit 'CONN_EB21A-04-D_ADM.pac';
+Change Drill 51;
+Pad '1' Round 0 71 R0 (0 0);
+Change Drill 51;
+Pad '2' Round 0 71 R0 (200 0);
+Change Drill 51;
+Pad '3' Round 0 71 R0 (400 0);
+Change Drill 51;
+Pad '4' Round 0 71 R0 (600 0);
+Layer 21;
+Wire 6 (-105 -183) (729 -183);
+Wire 6 (729 -183) (729 162);
+Wire 6 (729 162) (-105 162);
+Wire 6 (-105 162) (-105 -183);
+Wire 20 (-160 0) -180 (-190 0);
+Wire 20 (-190 0) -180 (-160 0);
+Change Size 50;
+Change Ratio 6;
+Text '>Value' SR0 (244 -25);
+Layer 51;
+Wire 6 (-100 -178) (724 -178);
+Wire 6 (724 -178) (724 157);
+Wire 6 (724 157) (-100 157);
+Wire 6 (-100 157) (-100 -178);
+Wire 20 (15 75) -180 (-15 75);
+Wire 20 (-15 75) -180 (15 75);
+Layer 22;
+Wire 20 (-160 0) -180 (-190 0);
+Wire 20 (-190 0) -180 (-160 0);
+Layer 25;
+Change Size 50;
+Change Ratio 6;
+Text '>Name' SR0 (183 -25);
+Layer 27;
+
+Edit 'CONN_004P_000C_1.sym';
+Layer 94;
+Pin '1' Pas None Middle R0 Pad 0 (0 0)
+Pin '2' Pas None Middle R0 Pad 0 (0 -100)
+Pin '3' Pas None Middle R0 Pad 0 (0 -200)
+Pin '4' Pas None Middle R0 Pad 0 (0 -300)
+Wire 6 (400 0) (200 0);
+Wire 6 (400 -100) (200 -100);
+Wire 6 (400 -200) (200 -200);
+Wire 6 (400 -300) (200 -300);
+Wire 6 (400 0) (350 33);
+Wire 6 (400 -100) (350 -67);
+Wire 6 (400 -200) (350 -167);
+Wire 6 (400 -300) (350 -267);
+Wire 6 (400 0) (350 -33);
+Wire 6 (400 -100) (350 -133);
+Wire 6 (400 -200) (350 -233);
+Wire 6 (400 -300) (350 -333);
+Wire 6 (200 100) (200 -400);
+Wire 6 (200 -400) (500 -400);
+Wire 6 (500 -400) (500 100);
+Wire 6 (500 100) (200 100);
+Layer 97;
+Layer 95;
+Change Size 82;
+Change Ratio 6;
+Text '>Name' SR0 (164 209);
+
+Edit 'CONN_004P_000C_2.sym';
+Layer 94;
+Pin '1' Pas None Middle R0 Pad 0 (0 0)
+Pin '2' Pas None Middle R0 Pad 0 (0 -100)
+Pin '3' Pas None Middle R0 Pad 0 (0 -200)
+Pin '4' Pas None Middle R0 Pad 0 (0 -300)
+Wire 6 (300 0) (200 0);
+Wire 6 (300 -100) (200 -100);
+Wire 6 (300 -200) (200 -200);
+Wire 6 (300 -300) (200 -300);
+Wire 6 (300 0) (350 33);
+Wire 6 (300 -100) (350 -67);
+Wire 6 (300 -200) (350 -167);
+Wire 6 (300 -300) (350 -267);
+Wire 6 (300 0) (350 -33);
+Wire 6 (300 -100) (350 -133);
+Wire 6 (300 -200) (350 -233);
+Wire 6 (300 -300) (350 -333);
+Wire 6 (200 100) (200 -400);
+Wire 6 (200 -400) (500 -400);
+Wire 6 (500 -400) (500 100);
+Wire 6 (500 100) (200 100);
+Layer 97;
+Layer 95;
+Change Size 82;
+Change Ratio 6;
+Text '>Name' SR0 (164 209);
+
+Edit 'CONN_004P_000C_3.sym';
+Layer 94;
+Pin '1' Pas None Middle R0 Pad 0 (0 0)
+Pin '2' Pas None Middle R0 Pad 0 (0 -100)
+Pin '3' Pas None Middle R0 Pad 0 (0 -200)
+Pin '4' Pas None Middle R0 Pad 0 (0 -300)
+Wire 6 (200 100) (200 -400);
+Wire 6 (200 -400) (500 -400);
+Wire 6 (500 -400) (500 100);
+Wire 6 (500 100) (200 100);
+Layer 97;
+Layer 95;
+Change Size 82;
+Change Ratio 6;
+Text '>Name' SR0 (164 209);
+
+Edit 'EB21A-04-D.dev';
+Prefix 'J';
+Description '';
+Value Off;
+Add CONN_004P_000C_1 'A' Next  0 (0 0);
+Package 'CONN_EB21A-04-D_ADM';
+Technology '';
+Attribute Datasheet 'http://www.adam-tech.com/downloader.php?p=EB21A-XX-D.pdf';
+Attribute Vendor 'Adam Technologies';
+Attribute Manufacturer_Part_Number 'EB21A-04-D';
+Attribute Built_By 'EMA_Cory';
+Attribute Copyright 'Copyright (C) 2018 Accelerated Designs. All rights reserved';
+Attribute SourceLibrary 'ADAM_TECHNOLOGIES_2020-04-28';
+Connect 'A.1' '1';
+Connect 'A.2' '2';
+Connect 'A.3' '3';
+Connect 'A.4' '4';
