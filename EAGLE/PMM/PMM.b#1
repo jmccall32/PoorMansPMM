@@ -165,8 +165,8 @@
 <text x="41.429940625" y="8.89" size="1.27" layer="21" align="bottom-center">D3</text>
 <text x="46.4312" y="8.89" size="1.27" layer="21" align="bottom-center">D4</text>
 <text x="51.42991875" y="8.89" size="1.27" layer="21" align="bottom-center">D5</text>
-<text x="56.43118125" y="8.89" size="1.27" layer="21" align="bottom-center">12V1</text>
-<text x="61.4299" y="8.89" size="1.27" layer="21" align="bottom-center">12V2</text>
+<text x="56.43118125" y="8.89" size="1.27" layer="21" align="bottom-center">D121</text>
+<text x="61.4299" y="8.89" size="1.27" layer="21" align="bottom-center">D122</text>
 </plain>
 <libraries>
 <library name="adafruit" urn="urn:adsk.eagle:library:420">

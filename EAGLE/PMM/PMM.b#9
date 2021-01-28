@@ -835,7 +835,7 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 </element>
 <element name="J2" library="TB001-500-12BE" package="CUI_TB001-500-12BE" value="TB001-500-12BE" x="11.43" y="3.81" smashed="yes">
 <attribute name="MANUFACTURER" value="CUI" x="11.43" y="3.81" size="1.778" layer="27" display="off"/>
-<attribute name="NAME" x="7.93" y="9.81" size="1.778" layer="25"/>
+<attribute name="NAME" x="37.14" y="6" size="1.778" layer="25"/>
 <attribute name="STANDARD" value="Manufacturer Recommendations" x="11.43" y="3.81" size="1.778" layer="27" display="off"/>
 <attribute name="VALUE" x="7.93" y="-2.44" size="1.778" layer="27"/>
 </element>

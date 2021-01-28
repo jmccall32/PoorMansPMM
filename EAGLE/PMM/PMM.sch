@@ -12244,8 +12244,8 @@ reed, 1 x norm. open with polarity</description>
 <attribute name="NAME" x="26.67" y="61.976" size="1.27" layer="95"/>
 <attribute name="VALUE" x="26.67" y="56.134" size="1.27" layer="96"/>
 </instance>
-<instance part="GND1" gate="1" x="123.19" y="93.98" smashed="yes">
-<attribute name="VALUE" x="120.65" y="91.44" size="1.778" layer="96"/>
+<instance part="GND1" gate="1" x="69.85" y="101.6" smashed="yes">
+<attribute name="VALUE" x="67.31" y="99.06" size="1.778" layer="96"/>
 </instance>
 <instance part="GND2" gate="1" x="-81.28" y="11.43" smashed="yes">
 <attribute name="VALUE" x="-83.82" y="8.89" size="1.778" layer="96"/>
@@ -12404,8 +12404,8 @@ reed, 1 x norm. open with polarity</description>
 <segment>
 <pinref part="K2" gate="A" pin="2"/>
 <pinref part="GND1" gate="1" pin="GND"/>
-<wire x1="63.5" y1="110.49" x2="123.19" y2="110.49" width="0.1524" layer="91"/>
-<wire x1="123.19" y1="110.49" x2="123.19" y2="96.52" width="0.1524" layer="91"/>
+<wire x1="63.5" y1="110.49" x2="69.85" y2="110.49" width="0.1524" layer="91"/>
+<wire x1="69.85" y1="110.49" x2="69.85" y2="104.14" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <pinref part="GND3" gate="1" pin="GND"/>
