@@ -77,6 +77,9 @@ void setup()
     EEPROM.put(delayTimeAddress,delayTime_ms);
   }
 
+  // Give the board 10 seconds for caps to come to voltage
+  delay(10000);
+  
   stateChangeTime = millis();
 }
  
@@ -95,11 +98,11 @@ void loop()
   {
     Serial.println("House battery voltage critically low");
     delay(5000); // Wait to make sure it's not a short transient
-    Vstart = readBatteryVoltage(startVoltagePin);
+    Vhouse = readBatteryVoltage(houseVoltagePin);
     if(Vhouse < Voff)
     {
       digitalWrite(boardPowerPin,LOW);
-      delay(1000); // Make sure to wait for debouncing
+      delay(1000); // Wait for debouncing purposes
     }
   }
 
