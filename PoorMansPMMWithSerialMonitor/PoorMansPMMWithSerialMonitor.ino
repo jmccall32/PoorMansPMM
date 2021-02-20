@@ -332,7 +332,7 @@ float readBatteryVoltage(int pin)
   return batteryVoltage;
 }
 
-float loadVoltageSetpoint(unsigned int address,float oldValue, float oldValue, float minValue, float maxValue)
+float loadVoltageSetpoint(unsigned int address,float oldValue, float minValue, float maxValue)
 {
   float newValue = oldValue;
   
