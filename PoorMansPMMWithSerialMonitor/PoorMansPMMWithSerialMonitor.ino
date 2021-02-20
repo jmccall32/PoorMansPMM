@@ -5,9 +5,9 @@ float Vstart = 12.7;
 float Vhouse = 12.7;
 
 // Control setpoints
-float Vcharge = 13.0;
+float Vcharge = 13.1;
 float Vstop = 12.8;
-float Voff = 12.0;
+float Voff = 11.5;
 unsigned long delayTime_ms = 60000;
 
 // EEProm addresses for control setpoints
@@ -29,8 +29,8 @@ const int dataEntryTimeout_ms = 10000;
 
 // Voltage input settings
 const float K_voltageScale = (100.0 / 18.0) + 1.0; // = R1/R2 + 1
-const int startVoltagePin = A0;
-const int houseVoltagePin = A1;
+const int startVoltagePin = A1;
+const int houseVoltagePin = A0;
 
 // Digital IO settings
 const int boardPowerPin = 13; 
