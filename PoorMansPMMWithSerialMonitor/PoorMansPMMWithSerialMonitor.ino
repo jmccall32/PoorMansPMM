@@ -11,8 +11,7 @@ float Voff = 12.0;
 unsigned long delayTime_ms = 60000;
 
 // EEProm addresses for control setpoints
-// This is the location of a byte (8-bit int) set to 1 if true, any other value if false (not using a bool because it seems like EEProm values can default to 0 or 255 depending on the micro used)
-const unsigned int EEPromIsSetAddress = 0;
+const unsigned int EEPromIsSetAddress = 0; // This is the location of a byte (8-bit int) set to 1 if true, any other value if false (not using a bool because it seems like "clear" EEProm values can be0 or 255)
 const unsigned int VchargeAddress = 4;
 const unsigned int VstopAddress = 8;
 const unsigned int VoffAddress = 12;
@@ -34,8 +33,8 @@ const int startVoltagePin = A0;
 const int houseVoltagePin = A1;
 
 // Digital IO settings
-const int boardPowerPin = 12; // chosen due to board location (if doing the minimum build with just a few hard-soldered header pins, this pin will support one corner of the board)
-const int crossChargingPin = 13; // 13 has a convenient LED on the board
+const int boardPowerPin = 13; 
+const int crossChargingPin = 12;
 const int D121 = 6; // 12V digital input (with 12V reed relay) #1
 const int D122 = 7; // 12V digital input (with 12V reed relay) #2
 
@@ -331,4 +330,23 @@ float readBatteryVoltage(int pin)
 //  float batteryVoltage = K_voltageScale * Vref * (rawCounts / maxCounts); 
   float batteryVoltage = K_voltageScale * Vref * (analogRead(pin) / maxCounts);
   return batteryVoltage;
+}
+
+float loadVoltageSetpoint(unsigned int address,float oldValue, float oldValue, float minValue, float maxValue)
+{
+  float newValue = oldValue;
+  
+  EEPROM.get(address,newValue);
+
+  // debugging step; delete for production
+  Serial.print(newValue);
+
+  if(newValue > maxValue || newValue < minValue)
+  {
+    return oldValue;
+  }
+  else
+  {
+    return newValue;
+  }
 }
