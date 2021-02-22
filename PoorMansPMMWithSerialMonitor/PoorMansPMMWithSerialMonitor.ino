@@ -8,10 +8,10 @@ float Vhouse = 12.7;
 float Vcharge = 13.1;
 float Vstop = 12.8;
 float Voff = 11.5;
-unsigned long delayTime_ms = 60000;
+unsigned long delayTime_ms = 30000;
 
 // EEProm addresses for control setpoints
-const unsigned int EEPromIsSetAddress = 0; // This is the location of a byte (8-bit int) set to 1 if true, any other value if false (not using a bool because it seems like "clear" EEProm values can be0 or 255)
+const unsigned int EEPromIsSetAddress = 0; // This is the location of a byte (8-bit int) set to 1 if true, any other value if false (not using a bool because "clear" EEProm values can be either 0 or 255)
 const unsigned int VchargeAddress = 4;
 const unsigned int VstopAddress = 8;
 const unsigned int VoffAddress = 12;
@@ -50,15 +50,14 @@ unsigned long timeInState = 0;
  
 void setup() 
 {
-  Serial.begin(115200);
-  
+  // Get the two digital outs into the correct initial state before you do anything else
   pinMode(boardPowerPin,OUTPUT);
   pinMode(crossChargingPin,OUTPUT);
-  pinMode(D121,INPUT);
-  pinMode(D122,INPUT);
-
   digitalWrite(boardPowerPin,HIGH);
   digitalWrite(crossChargingPin,LOW);
+  
+  pinMode(D121,INPUT);
+  pinMode(D122,INPUT);
 
   if(EEPROM.read(EEPromIsSetAddress) == 1)
   {
@@ -77,7 +76,9 @@ void setup()
     EEPROM.put(delayTimeAddress,delayTime_ms);
   }
 
-  // Give the board 10 seconds for caps to come to voltage
+  Serial.begin(115200);
+  
+  // Give the board 10 seconds for filter caps to come to voltage
   delay(10000);
   
   stateChangeTime = millis();
@@ -175,48 +176,49 @@ void loop()
   Serial.print("Charging delay time (ms)      = ");
   Serial.println(delayTime_ms);
   Serial.println();
-  Serial.println("Press 0 to change charge start voltage");
-  Serial.println("Press 1 to change charge stop voltage");
-  Serial.println("Press 2 to change low battery shutdown voltage");
-  Serial.println("Press 3 to change charging delay time");
-  Serial.println("Press 4 to restore default settings");
+  Serial.println("Press any key to change settings");
 
-  if(Serial.available() > 1)
+  if(Serial.available())
   {
-    Serial.println("Slow down, cowboy!");
-    delay(2000);
-    clearSerialBuffer();
-  }
-  else if(Serial.available())
-  {
+	clearSerialBuffer();
+	Serial.println();
+	Serial.println("Enter 1 to change charge start voltage");
+	Serial.println("Enter 2 to change charge stop voltage");
+	Serial.println("Enter 3 to change low battery shutdown voltage");
+	Serial.println("Enter 4 to change charging delay time");
+	Serial.println("Enter 5 to restore default settings");
+	Serial.println("Enter 0 to cancel");
 
-    char menuOption = Serial.read();
+    int menuOption = readSerialNumberInput(0,0,5,false);
 
     switch(menuOption)
     {
-      case '0':
+      case 0:
+        Serial.println("Cancelled");
+        break;
+      case 1:
         Serial.println("Enter new charge start voltage");
-        Vcharge = readSerialNumberInput(Vcharge,Vmin,Vmax);
+        Vcharge = readSerialNumberInput(Vcharge,Vmin,Vmax,true);
         EEPROM.put(VchargeAddress,Vcharge);
         break;
-      case '1':
+      case 2:
         Serial.println("Enter new charge stop voltage");
-        Vstop = readSerialNumberInput(Vstop,Vmin,Vmax);
+        Vstop = readSerialNumberInput(Vstop,Vmin,Vmax,true);
         EEPROM.put(VstopAddress,Vstop);
         break;
-      case '2':
+      case 3:
         Serial.println("Enter new low battery shutdown voltage");
-        Voff = readSerialNumberInput(Voff,Vmin,Vmax);
+        Voff = readSerialNumberInput(Voff,Vmin,Vmax,true);
         EEPROM.put(VoffAddress,Voff);
         break;
-      case '3':
+      case 4:
         Serial.println("Enter new charging delay time");
-        delayTime_ms = readSerialNumberInput(delayTime_ms,delayTime_min,delayTime_max);
+        delayTime_ms = readSerialNumberInput(delayTime_ms,delayTime_min,delayTime_max,true);
         EEPROM.put(delayTimeAddress,delayTime_ms);
         break;
-      case '4':
+      case 5:
         Serial.println("Enter 123456 to restore default settings");
-        if (readSerialNumberInput(0,123456,123456) == 123456)
+        if (readSerialNumberInput(0,123456,123456,false) == 123456)
         {
           EEPROM.update(EEPromIsSetAddress,0);
           Serial.println("Default settings will be restored on next board reset");
@@ -235,14 +237,14 @@ void loop()
 void clearScreen()
 {
   // Clears terminal screen if terminal responds to VT100-style commands
-  // Works well with "real" terminal program (e.g. PuTTY) but not the Arduino IDE serial monitor
+  // Works well with "real" terminal program (e.g. PuTTY or Tera Term) but not the Arduino IDE serial monitor
   Serial.write(27);       // ESC command
   Serial.print("[2J");    // clear screen command
   Serial.write(27);
   Serial.print("[H");     // cursor to home command
 }
 
-float readSerialNumberInput(float oldValue, float minValue, float maxValue)
+float readSerialNumberInput(float oldValue, float minValue, float maxValue, bool printResult)
 {
     static const int maxEntryLength = 32;
     int idx = 0;
@@ -296,9 +298,12 @@ float readSerialNumberInput(float oldValue, float minValue, float maxValue)
           else
           {
             Serial.println();
-            Serial.print("Value updated to ");
-            Serial.println(outputValue);
-            delay(2000);
+            if(printResult)
+            {
+              Serial.print("Value updated to ");
+              Serial.println(outputValue);
+              delay(2000);
+            }
             return outputValue;
           }
         }
@@ -340,9 +345,6 @@ float loadVoltageSetpoint(unsigned int address,float oldValue, float minValue, f
   float newValue = oldValue;
   
   EEPROM.get(address,newValue);
-
-  // debugging step; delete for production
-  Serial.print(newValue);
 
   if(newValue > maxValue || newValue < minValue)
   {
