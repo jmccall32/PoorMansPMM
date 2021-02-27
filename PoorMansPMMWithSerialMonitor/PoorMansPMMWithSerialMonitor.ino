@@ -8,7 +8,7 @@ float Vhouse = 12.7;
 float Vcharge = 13.1;
 float Vstop = 12.8;
 float Voff = 11.5;
-unsigned long delayTime_ms = 30000;
+unsigned long delayTime_ms = 10000;
 
 // EEProm addresses for control setpoints
 const unsigned int EEPromIsSetAddress = 0; // This is the location of a byte (8-bit int) set to 1 if true, any other value if false (not using a bool because "clear" EEProm values can be either 0 or 255)
@@ -20,9 +20,8 @@ const unsigned int delayTimeAddress = 16;
 // Setpoint limits
 const float Vmin = 10.0;
 const float Vmax = 15.0;
-// These are floats to match the inputs of the readSerialNumberInput() function
-const float delayTime_min = 1000;
-const float delayTime_max = 3600000;
+const unsigned int delayTime_min = 1000;
+const unsigned int delayTime_max = 3600000;
 
 // Timeout when changing setpoints through serial terminal
 const int dataEntryTimeout_ms = 10000;
@@ -35,6 +34,8 @@ const int houseVoltagePin = A0;
 // Digital IO settings
 const int boardPowerPin = 13; 
 const int crossChargingPin = 12;
+const int waitPin = 4; // indicator LED for wait state
+const int onPin = 5; // indicator LED for on state
 const int D121 = 6; // 12V digital input (with 12V reed relay) #1
 const int D122 = 7; // 12V digital input (with 12V reed relay) #2
 
@@ -52,20 +53,26 @@ void setup()
 {
   // Get the two digital outs into the correct initial state before you do anything else
   pinMode(boardPowerPin,OUTPUT);
-  pinMode(crossChargingPin,OUTPUT);
   digitalWrite(boardPowerPin,HIGH);
+  pinMode(crossChargingPin,OUTPUT);
   digitalWrite(crossChargingPin,LOW);
+  
+  pinMode(waitPin,OUTPUT);
+  pinMode(onPin,OUTPUT);
+  
+  // turn on both indicator LEDs as "lamp test" and to indicate bootup state
+  digitalWrite(waitPin,HIGH);
+  digitalWrite(onPin,HIGH);
   
   pinMode(D121,INPUT);
   pinMode(D122,INPUT);
 
   if(EEPROM.read(EEPromIsSetAddress) == 1)
   {
-    // Probably should add some range checking in case of bad stored values
-    EEPROM.get(VchargeAddress,Vcharge);
-    EEPROM.get(VstopAddress,Vstop);
-    EEPROM.get(VoffAddress,Voff);
-    EEPROM.get(delayTimeAddress,delayTime_ms);
+	Vcharge = loadFloatSetpoint(VchargeAddress,Vcharge,Vmin,Vmax);
+	Vstop = loadFloatSetpoint(VstopAddress,Vstop,Vmin,Vmax);
+	Vstop = loadFloatSetpoint(VstopAddress,Vstop,Vmin,Vmax);
+	delayTime_ms = loadUnsignedSetpoint(delayTimeAddress,delayTime_ms,delayTime_min,delayTime_max);
   }
   else
   {
@@ -111,6 +118,8 @@ void loop()
   {
     case STATE_OFF:
       digitalWrite(crossChargingPin,LOW);
+      digitalWrite(waitPin,LOW);
+      digitalWrite(onPin,LOW);
       if(Vhouse > Vcharge || Vstart > Vcharge)
       {
         nextState = STATE_WAIT;
@@ -122,6 +131,8 @@ void loop()
       break;
     case STATE_WAIT:
       digitalWrite(crossChargingPin,LOW);
+      digitalWrite(waitPin,HIGH);
+      digitalWrite(onPin,LOW);
       if(Vhouse > Vcharge || Vstart > Vcharge)
       {
         if (timeInState > delayTime_ms)
@@ -140,6 +151,8 @@ void loop()
       break;
     case STATE_ON:
       digitalWrite(crossChargingPin,HIGH);
+      digitalWrite(waitPin,LOW);
+      digitalWrite(onPin,HIGH);
       if(Vhouse < Vstop && Vstart < Vstop)
       {
         nextState = STATE_OFF;
@@ -248,7 +261,7 @@ float readSerialNumberInput(float oldValue, float minValue, float maxValue, bool
 {
     static const int maxEntryLength = 32;
     int idx = 0;
-    char enterKey = '\r';
+    static const char enterKey = '\r';
     char thisChar;
     char thisString[maxEntryLength];
     bool entryComplete = false;
@@ -334,21 +347,45 @@ float readBatteryVoltage(int pin)
   // I'm making this a float to ensure that (rawCounts / maxCounts) doesn't do integer division.  Not sure if this is necessary.  I should go learn more about how C++ and Arduino handle mixed types...
   static const float maxCounts = pow(2.0,10.0) - 1.0;
   
-//  int rawCounts = analogRead(pin);
-//  float batteryVoltage = K_voltageScale * Vref * (rawCounts / maxCounts); 
   float batteryVoltage = K_voltageScale * Vref * (analogRead(pin) / maxCounts);
   return batteryVoltage;
 }
 
-float loadVoltageSetpoint(unsigned int address,float oldValue, float minValue, float maxValue)
+float loadFloatSetpoint(unsigned int address,float oldValue, float minValue, float maxValue)
 {
-  float newValue = oldValue;
+  float newValue;
   
   EEPROM.get(address,newValue);
 
   if(newValue > maxValue || newValue < minValue)
   {
+	  Serial.print("Out-of-range value at EEPROM address ");
+	  Serial.print(address);
+	  Serial.println(". Default value used instead.");
+	  EEPROM.put(address,oldValue);
     return oldValue;
+	
+  }
+  else
+  {
+    return newValue;
+  }
+}
+
+unsigned int loadUnsignedSetpoint(unsigned int address,unsigned int oldValue, unsigned int minValue, unsigned int maxValue)
+{
+  unsigned int newValue;
+  
+  EEPROM.get(address,newValue);
+
+  if(newValue > maxValue || newValue < minValue)
+  {
+	  Serial.print("Out-of-range value at EEPROM address ");
+	  Serial.print(address);
+	  Serial.println(". Default value used instead.");
+	  EEPROM.put(address,oldValue);
+    return oldValue;
+	
   }
   else
   {
