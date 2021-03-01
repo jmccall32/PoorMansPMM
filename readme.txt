@@ -1,1 +1,1 @@
-As first built and deployed
+Rev A board with indicator LEDs added in place of reed relays and spare terminals

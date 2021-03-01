@@ -34,10 +34,8 @@ const int houseVoltagePin = A0;
 // Digital IO settings
 const int boardPowerPin = 13; 
 const int crossChargingPin = 12;
-const int waitPin = 4; // indicator LED for wait state
-const int onPin = 5; // indicator LED for on state
-const int D121 = 6; // 12V digital input (with 12V reed relay) #1
-const int D122 = 7; // 12V digital input (with 12V reed relay) #2
+const int waitPin = 6; // indicator LED for wait state
+const int onPin = 7; // indicator LED for on state
 
 // State machine variables
 const unsigned int STATE_OFF = 0;
@@ -63,9 +61,6 @@ void setup()
   // turn on both indicator LEDs as "lamp test" and to indicate bootup state
   digitalWrite(waitPin,HIGH);
   digitalWrite(onPin,HIGH);
-  
-  pinMode(D121,INPUT);
-  pinMode(D122,INPUT);
 
   if(EEPROM.read(EEPromIsSetAddress) == 1)
   {
