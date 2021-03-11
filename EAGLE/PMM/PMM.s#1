@@ -12214,7 +12214,7 @@ reed, 1 x norm. open with polarity</description>
 <part name="C1" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="CPOL-US" device="E2.5-7" package3d_urn="urn:adsk.eagle:package:6240501/1" value="100uF"/>
 <part name="C2" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="CPOL-US" device="E2.5-7" package3d_urn="urn:adsk.eagle:package:6240501/1" value="100uF"/>
 <part name="C3" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="CPOL-US" device="E2.5-7" package3d_urn="urn:adsk.eagle:package:6240501/1" value="100uF"/>
-<part name="C4" library="capacitor-wima" library_urn="urn:adsk.eagle:library:116" deviceset="C" device="10/6" package3d_urn="urn:adsk.eagle:package:5401/1" value="0.33uF"/>
+<part name="C4" library="capacitor-wima" library_urn="urn:adsk.eagle:library:116" deviceset="C" device="10/6" package3d_urn="urn:adsk.eagle:package:5401/1" value="0.47uF"/>
 <part name="J1" library="TB001-500-12BE" deviceset="TB001-500-12BE" device=""/>
 <part name="K3" library="relay" library_urn="urn:adsk.eagle:library:339" deviceset="35701331" device="" package3d_urn="urn:adsk.eagle:package:24297/1"/>
 <part name="K4" library="relay" library_urn="urn:adsk.eagle:library:339" deviceset="35701331" device="" package3d_urn="urn:adsk.eagle:package:24297/1"/>
