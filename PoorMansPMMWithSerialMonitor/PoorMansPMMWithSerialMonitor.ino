@@ -34,8 +34,8 @@ const int houseVoltagePin = A0;
 // Digital IO settings
 const int boardPowerPin = 12; 
 const int crossChargingPin = 13; // has on-board indicator LED which is convenient
-const int waitPin = 4; // indicator LED for wait state
-const int onPin = 5; // indicator LED for on state
+const int waitPin = 8; // indicator LED for wait state
+const int onPin = 9; // indicator LED for on state
 const int D121 = 6; // 12V digital input (with 12V reed relay) #1
 const int D122 = 7; // 12V digital input (with 12V reed relay) #2
 
