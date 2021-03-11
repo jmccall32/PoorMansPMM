@@ -12380,26 +12380,6 @@ reed, 1 x norm. open with polarity</description>
 <pinref part="C4" gate="G$1" pin="1"/>
 </segment>
 </net>
-<net name="N$5" class="0">
-<segment>
-<pinref part="MODUL1" gate="MODUL" pin="D12/MISO"/>
-<wire x1="130.81" y1="48.26" x2="139.7" y2="48.26" width="0.1524" layer="91"/>
-<wire x1="139.7" y1="48.26" x2="139.7" y2="113.03" width="0.1524" layer="91"/>
-<pinref part="K2" gate="A" pin="1"/>
-<wire x1="139.7" y1="113.03" x2="63.5" y2="113.03" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$6" class="0">
-<segment>
-<pinref part="MODUL1" gate="MODUL" pin="D13/SCK"/>
-<wire x1="130.81" y1="45.72" x2="139.7" y2="45.72" width="0.1524" layer="91"/>
-<wire x1="139.7" y1="45.72" x2="139.7" y2="-15.24" width="0.1524" layer="91"/>
-<wire x1="139.7" y1="-15.24" x2="-57.15" y2="-15.24" width="0.1524" layer="91"/>
-<pinref part="K1" gate="G$1" pin="1"/>
-<wire x1="-57.15" y1="-15.24" x2="-57.15" y2="66.04" width="0.1524" layer="91"/>
-<wire x1="-57.15" y1="66.04" x2="-15.24" y2="66.04" width="0.1524" layer="91"/>
-</segment>
-</net>
 <net name="GND" class="0">
 <segment>
 <pinref part="K2" gate="A" pin="2"/>
@@ -12665,6 +12645,26 @@ reed, 1 x norm. open with polarity</description>
 <pinref part="K4" gate="2" pin="P"/>
 <pinref part="MODUL1" gate="MODUL" pin="D7"/>
 <wire x1="157.48" y1="60.96" x2="130.81" y2="60.96" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$22" class="0">
+<segment>
+<pinref part="MODUL1" gate="MODUL" pin="D12/MISO"/>
+<wire x1="130.81" y1="48.26" x2="139.7" y2="48.26" width="0.1524" layer="91"/>
+<wire x1="139.7" y1="48.26" x2="139.7" y2="-15.24" width="0.1524" layer="91"/>
+<wire x1="139.7" y1="-15.24" x2="-57.15" y2="-15.24" width="0.1524" layer="91"/>
+<pinref part="K1" gate="G$1" pin="1"/>
+<wire x1="-57.15" y1="-15.24" x2="-57.15" y2="66.04" width="0.1524" layer="91"/>
+<wire x1="-57.15" y1="66.04" x2="-15.24" y2="66.04" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$5" class="0">
+<segment>
+<pinref part="MODUL1" gate="MODUL" pin="D13/SCK"/>
+<wire x1="130.81" y1="45.72" x2="134.62" y2="45.72" width="0.1524" layer="91"/>
+<pinref part="K2" gate="A" pin="1"/>
+<wire x1="134.62" y1="45.72" x2="134.62" y2="113.03" width="0.1524" layer="91"/>
+<wire x1="134.62" y1="113.03" x2="63.5" y2="113.03" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>
