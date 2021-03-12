@@ -1146,7 +1146,12 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <signal name="N$5">
 <contactref element="MODUL1" pad="J2.15"/>
 <contactref element="K2" pad="1"/>
-<wire x1="8.89" y1="45.72" x2="69.85" y2="33.02" width="0" layer="19" extent="1-1"/>
+<wire x1="69.85" y1="33.02" x2="68.89053125" y2="33.02" width="0.1524" layer="16"/>
+<wire x1="14.00175" y1="40.60825" x2="8.89" y2="45.72" width="0.1524" layer="16"/>
+<wire x1="25.62444375" y1="31.7373" x2="16.75349375" y2="40.60825" width="0.1524" layer="16"/>
+<wire x1="16.75349375" y1="40.60825" x2="14.00175" y2="40.60825" width="0.1524" layer="16"/>
+<wire x1="68.89053125" y1="33.02" x2="67.60783125" y2="31.7373" width="0.1524" layer="16"/>
+<wire x1="67.60783125" y1="31.7373" x2="25.62444375" y2="31.7373" width="0.1524" layer="16"/>
 </signal>
 </signals>
 <mfgpreviewcolors>

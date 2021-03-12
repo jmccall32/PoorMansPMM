@@ -267,8 +267,8 @@ Mors, distributor RS Components</description>
 <wire x1="-1.0922" y1="-6.5024" x2="12.7" y2="-6.5024" width="0.1524" layer="21"/>
 <wire x1="-1.0922" y1="6.5024" x2="12.7" y2="6.5024" width="0.1524" layer="21"/>
 <wire x1="12.7" y1="-6.5024" x2="12.7" y2="6.5024" width="0.1524" layer="51"/>
-<pad name="B" x="0" y="-5.08" drill="1.016" diameter="2.54"/>
-<pad name="B1" x="0" y="5.08" drill="1.016" diameter="2.54"/>
+<pad name="B" x="0" y="-2.54" drill="1.016" diameter="2.54"/>
+<pad name="B1" x="0" y="2.54" drill="1.016" diameter="2.54"/>
 <pad name="3" x="12.7" y="-4.699" drill="1.8542"/>
 <pad name="1" x="12.7" y="4.699" drill="1.8542"/>
 <pad name="2" x="12.7" y="0" drill="1.8542"/>
