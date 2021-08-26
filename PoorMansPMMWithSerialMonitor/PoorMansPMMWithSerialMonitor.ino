@@ -5,10 +5,10 @@ float Vstart = 12.7;
 float Vhouse = 12.7;
 
 // Control setpoints
-float Vcharge = 13.1;
-float Vstop = 12.8;
-float Voff = 11.5;
-unsigned long delayTime_ms = 10000;
+float Vcharge = 13.1; // Start cross-charging if either battery rises above this voltage
+float Vstop = 12.8; // Stop cross-charging if both batteries fall below this voltage
+float Voff = 11.5; // Shut down controller if house battery falls below this voltage
+unsigned long delayTime_ms = 10000; // Wait this long after voltage rises before starting cross-charging
 
 // EEProm addresses for control setpoints
 const unsigned int EEPromIsSetAddress = 0; // This is the location of a byte (8-bit int) set to 1 if true, any other value if false (not using a bool because "clear" EEProm values can be either 0 or 255)
@@ -41,11 +41,13 @@ const int DI2 = 7; // Spare digital input (with 12V reed relay) #2
 const int DO1 = 4; // Spare digital output (with 5A dry contacts) #1
 const int DO2 = 5; // Spare digital output (with 5A dry contacts) #2
 
-// State machine variables
+// State machine constants
 const unsigned int STATE_OFF = 0;
 const unsigned int STATE_WAIT = 1;
 const unsigned int STATE_ON = 2;
 const char* stateNames[] = {"off","waiting to charge","cross-charging"};
+
+// State machine variables
 int state = STATE_OFF;
 int nextState = STATE_OFF;
 unsigned long stateChangeTime = 0;
