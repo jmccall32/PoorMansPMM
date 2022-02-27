@@ -25,7 +25,7 @@ const float Vmax = 15.0;
 const float Vdiff_min = 0.0;
 const float Vdiff_max = 3.0;
 const unsigned int delayTime_min = 1000;
-const unsigned int delayTime_max = 3600000;
+const unsigned int delayTime_max = 30000;
 
 // Timeout when changing setpoints through serial terminal
 const int dataEntryTimeout_ms = 10000;
@@ -96,6 +96,8 @@ void setup()
   }
 
   Serial.begin(115200);  // This is set high so that the screen refreshes almost instantly
+  clearScreen();
+  Serial.print("Booting");
   
   // Give the board 10 seconds for filter caps to come to voltage
   delay(10000);
@@ -217,7 +219,7 @@ void loop()
 	Serial.println("Enter 6 to restore default settings");
 	Serial.println("Enter 0 to cancel");
 
-    int menuOption = readSerialNumberInput(0,0,5,false);
+    int menuOption = readSerialNumberInput(0,0,6,false);
 
     switch(menuOption)
     {
