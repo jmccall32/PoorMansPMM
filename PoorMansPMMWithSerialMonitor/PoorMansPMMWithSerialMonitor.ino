@@ -23,6 +23,8 @@ const unsigned int VdiffAddress = 20;
 // Setpoint limits
 const float Vmin = 10.0;
 const float Vmax = 15.0;
+const float Vdiff_min = 0.0;
+const float Vdiff_max = 3.0;
 const unsigned int delayTime_min = 1000;
 const unsigned int delayTime_max = 30000;
 
