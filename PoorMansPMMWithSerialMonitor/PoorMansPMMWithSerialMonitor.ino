@@ -11,7 +11,6 @@ float Vdiff = 0.25; // Start cross-charging if start battery falls below house b
 float Voff = 11.5; // Shut down controller if house battery falls below this voltage
 unsigned long delayTime_ms = 10000; // Wait this long after voltage rises before starting cross-charging
 
-
 // EEProm addresses for control setpoints
 const unsigned int EEPromIsSetAddress = 0; // This is the location of a byte (8-bit int) set to 1 if true, any other value if false (not using a bool because "clear" EEProm values can be either 0 or 255)
 const unsigned int VchargeAddress = 4;
@@ -37,12 +36,15 @@ const int startVoltagePin = A1;
 const int houseVoltagePin = A0;
 
 // Digital IO settings
-const int boardPowerPin = 13; 
-const int crossChargingPin = 12;
-const int waitPin = 4; // indicator LED for wait state
-const int onPin = 5; // indicator LED for on state
-const int D121 = 6; // 12V digital input (with 12V reed relay) #1
-const int D122 = 7; // 12V digital input (with 12V reed relay) #2
+const int boardPowerRelay = 12; // relay to keep board power on
+const int crossChargingRelay = 13; // pilot relay for off-board cross charging solenoid.  Has on-board indicator LED which is convenient
+const int waitIndicator = 8; // indicator LED for wait state
+const int onIndicator = 9; // indicator LED for on state
+const int DI1 = 6; // Spare digital input (with 12V reed relay) #1
+const int DI2 = 7; // Spare digital input (with 12V reed relay) #2
+const int DO1 = 4; // Spare digital output (with 5A dry contacts) #1
+const int DO2 = 5; // Spare digital output (with 5A dry contacts) #2
+
 
 // State machine variables
 const unsigned int STATE_BOOT = 0;
@@ -52,28 +54,32 @@ const unsigned int STATE_ON = 3;
 const char* stateNames[] = {"booting up","off","waiting to charge","cross-charging"};
 int state = STATE_BOOT;
 int nextState = STATE_BOOT;
+
 unsigned long stateChangeTime = 0;
 unsigned long timeInState = 0;
  
 void setup() 
 {
-  // Get the two digital outs into the correct initial state before you do anything else
-  pinMode(boardPowerPin,OUTPUT);
-  digitalWrite(boardPowerPin,HIGH);
-  pinMode(crossChargingPin,OUTPUT);
-  digitalWrite(crossChargingPin,LOW);
+  // Get the two main relays into the correct initial state before you do anything else
+  pinMode(boardPowerRelay,OUTPUT);
+  digitalWrite(boardPowerRelay,HIGH);
+  pinMode(crossChargingRelay,OUTPUT);
+  digitalWrite(crossChargingRelay,LOW);
   
   stateChangeTime = millis();
+
+  // Initialize other DIO
+  pinMode(waitIndicator,OUTPUT);
+  pinMode(onIndicator,OUTPUT);
+  pinMode(DI1,INPUT);
+  pinMode(DI2,INPUT);
+  pinMode(DO1,OUTPUT);
+  pinMode(DO2,OUTPUT);
   
   // turn on both indicator LEDs as "lamp test" and to indicate bootup state
-  pinMode(waitPin,OUTPUT);
-  pinMode(onPin,OUTPUT);
-  digitalWrite(waitPin,HIGH);
-  digitalWrite(onPin,HIGH);
+  digitalWrite(waitIndicator,HIGH);
+  digitalWrite(onIndicator,HIGH);
   
-  pinMode(D121,INPUT);
-  pinMode(D122,INPUT);
-
   if(EEPROM.read(EEPromIsSetAddress) == 1)
   {
 	Vcharge = loadFloatSetpoint(VchargeAddress,Vcharge,Vmin,Vmax);
@@ -120,7 +126,7 @@ void loop()
     Vhouse = readBatteryVoltage(houseVoltagePin);
     if(Vhouse < Voff)
     {
-      digitalWrite(boardPowerPin,LOW);
+      digitalWrite(boardPowerRelay,LOW);
       delay(1000); // Wait for debouncing purposes
     }
   }
@@ -128,9 +134,9 @@ void loop()
   switch(state)
   {
     case STATE_OFF:
-      digitalWrite(crossChargingPin,LOW);
-      digitalWrite(waitPin,LOW);
-      digitalWrite(onPin,LOW);
+      digitalWrite(crossChargingRelay,LOW);
+      digitalWrite(waitIndicator,LOW);
+      digitalWrite(onIndicator,LOW);
       if(Vstart > Vcharge || (Vhouse - Vstart) > Vdiff)
       {
         nextState = STATE_WAIT;
@@ -141,9 +147,9 @@ void loop()
       }
       break;
     case STATE_WAIT:
-      digitalWrite(crossChargingPin,LOW);
-      digitalWrite(waitPin,HIGH);
-      digitalWrite(onPin,LOW);
+      digitalWrite(crossChargingRelay,LOW);
+      digitalWrite(waitIndicator,HIGH);
+      digitalWrite(onIndicator,LOW);
       if(Vstart > Vcharge || (Vhouse - Vstart) > Vdiff)
       {
         if (timeInState > delayTime_ms)
@@ -161,10 +167,10 @@ void loop()
       }
       break;
     case STATE_ON:
-      digitalWrite(crossChargingPin,HIGH);
-      digitalWrite(waitPin,LOW);
-      digitalWrite(onPin,HIGH);
-      if(Vstart < Vstop && (Vstart - Vhouse) > Vdiff)
+      digitalWrite(crossChargingRelay,HIGH);
+      digitalWrite(waitIndicator,LOW);
+      digitalWrite(onIndicator,HIGH);
+      if(Vstart < Vstop && Vstart > Vhouse)
       {
         nextState = STATE_OFF;
       }
@@ -212,7 +218,6 @@ void loop()
         Serial.println("Enter new low battery shutdown voltage");
         Voff = readSerialNumberInput(Voff,Vmin,Vmax,true);
         EEPROM.put(VoffAddress,Voff);
-			  
       case 4:
         Serial.println("Enter new differential voltage");
         Voff = readSerialNumberInput(Vdiff,Vdiff_min,Vdiff_max,true);
