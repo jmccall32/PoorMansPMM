@@ -45,12 +45,13 @@ const int D121 = 6; // 12V digital input (with 12V reed relay) #1
 const int D122 = 7; // 12V digital input (with 12V reed relay) #2
 
 // State machine variables
-const unsigned int STATE_OFF = 0;
-const unsigned int STATE_WAIT = 1;
-const unsigned int STATE_ON = 2;
-const char* stateNames[] = {"off","waiting to charge","cross-charging"};
-int state = STATE_OFF;
-int nextState = STATE_OFF;
+const unsigned int STATE_BOOT = 0;
+const unsigned int STATE_OFF = 1;
+const unsigned int STATE_WAIT = 2;
+const unsigned int STATE_ON = 3;
+const char* stateNames[] = {"booting up","off","waiting to charge","cross-charging"};
+int state = STATE_BOOT;
+int nextState = STATE_BOOT;
 unsigned long stateChangeTime = 0;
 unsigned long timeInState = 0;
  
@@ -62,10 +63,11 @@ void setup()
   pinMode(crossChargingPin,OUTPUT);
   digitalWrite(crossChargingPin,LOW);
   
-  pinMode(waitPin,OUTPUT);
-  pinMode(onPin,OUTPUT);
+  stateChangeTime = millis();
   
   // turn on both indicator LEDs as "lamp test" and to indicate bootup state
+  pinMode(waitPin,OUTPUT);
+  pinMode(onPin,OUTPUT);
   digitalWrite(waitPin,HIGH);
   digitalWrite(onPin,HIGH);
   
@@ -91,13 +93,13 @@ void setup()
   }
 
   Serial.begin(115200);
-  clearScreen();
-  Serial.print("Booting");
-  
-  // Give the board 10 seconds for filter caps to come to voltage
-  delay(10000);
-  
-  stateChangeTime = millis();
+    for (int i = 0; i <= 10; i++)
+    {
+      timeInState = millis() - stateChangeTime;
+      printStatus();
+      delay(1000);
+    }
+  nextState = STATE_OFF;
 }
  
 void loop() 
@@ -173,32 +175,7 @@ void loop()
       break;
   }
   
-  clearScreen();
-  Serial.print("Starting battery voltage      = ");
-  Serial.println(Vstart);
-  Serial.print("House battery voltage         = ");
-  Serial.println(Vhouse);
-  Serial.print("System state  = ");
-  Serial.print(state);
-  Serial.print(": ");
-  Serial.println(stateNames[state]);
-  Serial.print("Next state    = ");
-  Serial.print(nextState);
-  Serial.print(": ");
-  Serial.println(stateNames[nextState]);
-  Serial.print("Time in state (s)             = ");
-  Serial.println(timeInState/1000);
-  Serial.println();
-  Serial.print("Charge start voltage          = ");
-  Serial.println(Vcharge);
-  Serial.print("Charge stop voltage           = ");
-  Serial.println(Vstop);
-  Serial.print("Low battery shutdown voltage  = ");
-  Serial.println(Voff);
-  Serial.print("Charge start differential voltage  = ");
-  Serial.println(Vdiff);
-  Serial.print("Charging delay time (ms)      = ");
-  Serial.println(delayTime_ms);
+  printStatus();
   Serial.println();
   Serial.println("Press any key to change settings");
 
@@ -272,6 +249,36 @@ void clearScreen()
   Serial.print("[2J");    // clear screen command
   Serial.write(27);
   Serial.print("[H");     // cursor to home command
+}
+
+void printStatus()
+{
+  clearScreen();
+  Serial.print("Starting battery voltage      = ");
+  Serial.println(Vstart);
+  Serial.print("House battery voltage         = ");
+  Serial.println(Vhouse);
+  Serial.print("System state  = ");
+  Serial.print(state);
+  Serial.print(": ");
+  Serial.println(stateNames[state]);
+  Serial.print("Next state    = ");
+  Serial.print(nextState);
+  Serial.print(": ");
+  Serial.println(stateNames[nextState]);
+  Serial.print("Time in state (s)             = ");
+  Serial.println(timeInState/1000);
+  Serial.println();
+  Serial.print("Charge start voltage          = ");
+  Serial.println(Vcharge);
+  Serial.print("Charge stop voltage           = ");
+  Serial.println(Vstop);
+  Serial.print("Low battery shutdown voltage  = ");
+  Serial.println(Voff);
+  Serial.print("Charge start differential voltage  = ");
+  Serial.println(Vdiff);
+  Serial.print("Charging delay time (ms)      = ");
+  Serial.println(delayTime_ms);
 }
 
 float readSerialNumberInput(float oldValue, float minValue, float maxValue, bool printResult)
