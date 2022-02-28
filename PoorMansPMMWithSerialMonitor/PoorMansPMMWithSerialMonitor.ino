@@ -7,7 +7,7 @@ float Vhouse = 12.7;
 // Control setpoints
 float Vcharge = 13.2; // Start cross-charging if start battery rises above this voltage
 float Vstop = 12.9; // Stop cross-charging from start battery if it falls below this voltage
-float Vdiff = 0.1; // Start cross-charging if start battery falls below house battery by this amount
+float Vdiff = 0.25; // Start cross-charging if start battery falls below house battery by this amount
 float Voff = 11.5; // Shut down controller if house battery falls below this voltage
 unsigned long delayTime_ms = 10000; // Wait this long after voltage rises before starting cross-charging
 
@@ -162,7 +162,7 @@ void loop()
       digitalWrite(crossChargingPin,HIGH);
       digitalWrite(waitPin,LOW);
       digitalWrite(onPin,HIGH);
-      if(Vstart < Vstop && Vstart > Vhouse)
+      if(Vstart < Vstop && (Vstart - Vhouse) > Vdiff)
       {
         nextState = STATE_OFF;
       }
