@@ -53,6 +53,9 @@ int state = STATE_BOOT;
 int nextState = STATE_BOOT;
 unsigned long stateChangeTime = 0;
 unsigned long timeInState = 0;
+
+// Acesses data logging mode in which serial monitor puts out tab delimited columnar data instead of human-friendly screens
+bool dataLoggingMode = false;
  
 void setup() 
 {
@@ -75,11 +78,11 @@ void setup()
 
   if(EEPROM.read(EEPromIsSetAddress) == 1)
   {
-	Vcharge = loadFloatSetpoint(VchargeAddress,Vcharge,Vmin,Vmax);
-	Vstop = loadFloatSetpoint(VstopAddress,Vstop,Vmin,Vmax);
-	Vstop = loadFloatSetpoint(VstopAddress,Vstop,Vmin,Vmax);
-	Vdiff = loadFloatSetpoint(VdiffAddress,Vdiff,Vdiff_min,Vdiff_max);
-	delayTime_ms = loadUnsignedSetpoint(delayTimeAddress,delayTime_ms,delayTime_min,delayTime_max);
+    Vcharge = loadFloatSetpoint(VchargeAddress,Vcharge,Vmin,Vmax);
+    Vstop = loadFloatSetpoint(VstopAddress,Vstop,Vmin,Vmax);
+    Vstop = loadFloatSetpoint(VstopAddress,Vstop,Vmin,Vmax);
+    Vdiff = loadFloatSetpoint(VdiffAddress,Vdiff,Vdiff_min,Vdiff_max);
+    delayTime_ms = loadUnsignedSetpoint(delayTimeAddress,delayTime_ms,delayTime_min,delayTime_max);
   }
   else
   {
@@ -174,23 +177,57 @@ void loop()
       }
       break;
   }
-  printStatus();
-  Serial.println();
+  
+  if(dataLoggingMode)
+  {
+    if(Serial.available())
+    {
+      dataLoggingMode = false;
+      clearSerialBuffer();
+    }
+    else
+    {
+		  printDataLogRow();
+    }
+  }
+  else
+  {
+    printStatus();
+    Serial.println();
+    getUserInput();
+  }
+  
+  delay(1000);
+}
+
+void clearScreen()
+{
+  // Clears terminal screen if terminal responds to VT100-style commands
+  // Works well with "real" terminal program (e.g. PuTTY or Tera Term) but not the Arduino IDE serial monitor
+  Serial.write(27);       // ESC command
+  Serial.print("[2J");    // clear screen command
+  Serial.write(27);
+  Serial.print("[H");     // cursor to home command
+}
+
+void getUserInput()
+{
   Serial.println("Press any key to change settings");
 
   if(Serial.available())
   {
-	clearSerialBuffer();
-	Serial.println();
-	Serial.println("Enter 1 to change charge start voltage");
-	Serial.println("Enter 2 to change charge stop voltage");
-	Serial.println("Enter 3 to change low battery shutdown voltage");
-	Serial.println("Enter 4 to change differential voltage");
-	Serial.println("Enter 5 to change charging delay time");
-	Serial.println("Enter 6 to restore default settings");
-	Serial.println("Enter 0 to cancel");
+    clearSerialBuffer();
+    Serial.println();
+    Serial.println("Enter 1 to change charge start voltage");
+    Serial.println("Enter 2 to change charge stop voltage");
+    Serial.println("Enter 3 to change low battery shutdown voltage");
+    Serial.println("Enter 4 to change differential voltage");
+    Serial.println("Enter 5 to change charging delay time");
+    Serial.println("Enter 6 to restore default settings");
+    Serial.println("Enter 7 to enter data logging mode");
+    Serial.println("Enter 0 to cancel");
 
-    int menuOption = readSerialNumberInput(0,0,6,false);
+    int menuOption = readSerialNumberInput(0,0,7,false);
 
     switch(menuOption)
     {
@@ -230,23 +267,33 @@ void loop()
           delay(2000);
         }
         break;
+      case 7:
+			  dataLoggingMode = true;
+
+        clearScreen();
+        Serial.println("Entering data logging mode");
+				Serial.println("Press any key to exit");
+				Serial.println("time_ms	Vstart	Vhouse	state	nextState");
+				printDataLogRow();
+        break;
       default:
         Serial.println("Invalid entry");
         break;
     }
   }
-  
-  delay(1000);
 }
 
-void clearScreen()
+void printDataLogRow()
 {
-  // Clears terminal screen if terminal responds to VT100-style commands
-  // Works well with "real" terminal program (e.g. PuTTY or Tera Term) but not the Arduino IDE serial monitor
-  Serial.write(27);       // ESC command
-  Serial.print("[2J");    // clear screen command
-  Serial.write(27);
-  Serial.print("[H");     // cursor to home command
+	Serial.print(millis());
+	Serial.print("	");
+	Serial.print(Vstart);
+	Serial.print("	");
+	Serial.print(Vhouse);
+	Serial.print("	");
+	Serial.print(state);
+	Serial.print("	");
+	Serial.println(nextState);
 }
 
 void printStatus()
@@ -302,7 +349,6 @@ float readSerialNumberInput(float oldValue, float minValue, float maxValue, bool
       else if(Serial.available())
       {
         lastEntryTime = millis();
-
         thisChar = Serial.read();
 
         if(thisChar == enterKey)
