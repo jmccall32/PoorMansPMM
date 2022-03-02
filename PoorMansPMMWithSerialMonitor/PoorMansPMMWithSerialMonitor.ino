@@ -36,15 +36,12 @@ const int startVoltagePin = A1;
 const int houseVoltagePin = A0;
 
 // Digital IO settings
-const int boardPowerRelay = 12; // relay to keep board power on
-const int crossChargingRelay = 13; // pilot relay for off-board cross charging solenoid.  Has on-board indicator LED which is convenient
-const int waitIndicator = 8; // indicator LED for wait state
-const int onIndicator = 9; // indicator LED for on state
-const int DI1 = 6; // Spare digital input (with 12V reed relay) #1
-const int DI2 = 7; // Spare digital input (with 12V reed relay) #2
-const int DO1 = 4; // Spare digital output (with 5A dry contacts) #1
-const int DO2 = 5; // Spare digital output (with 5A dry contacts) #2
-
+const int boardPowerRelay = 13; // relay to keep board power on
+const int crossChargingRelay = 12; // pilot relay for off-board cross charging solenoid
+const int waitIndicator = 4; // indicator LED for wait state
+const int onIndicator = 5; // indicator LED for on state
+const int D121 = 6; // 12V digital input (with 12V reed relay) #1
+const int D122 = 7; // 12V digital input (with 12V reed relay) #2
 
 // State machine variables
 const unsigned int STATE_BOOT = 0;
@@ -54,7 +51,6 @@ const unsigned int STATE_ON = 3;
 const char* stateNames[] = {"booting up","off","waiting to charge","cross-charging"};
 int state = STATE_BOOT;
 int nextState = STATE_BOOT;
-
 unsigned long stateChangeTime = 0;
 unsigned long timeInState = 0;
  
@@ -67,19 +63,16 @@ void setup()
   digitalWrite(crossChargingRelay,LOW);
   
   stateChangeTime = millis();
-
-  // Initialize other DIO
-  pinMode(waitIndicator,OUTPUT);
-  pinMode(onIndicator,OUTPUT);
-  pinMode(DI1,INPUT);
-  pinMode(DI2,INPUT);
-  pinMode(DO1,OUTPUT);
-  pinMode(DO2,OUTPUT);
   
   // turn on both indicator LEDs as "lamp test" and to indicate bootup state
+  pinMode(waitIndicator,OUTPUT);
+  pinMode(onIndicator,OUTPUT);
   digitalWrite(waitIndicator,HIGH);
   digitalWrite(onIndicator,HIGH);
   
+  pinMode(D121,INPUT);
+  pinMode(D122,INPUT);
+
   if(EEPROM.read(EEPromIsSetAddress) == 1)
   {
 	Vcharge = loadFloatSetpoint(VchargeAddress,Vcharge,Vmin,Vmax);
@@ -99,12 +92,13 @@ void setup()
   }
 
   Serial.begin(115200);
-    for (int i = 0; i <= 10; i++)
-    {
-      timeInState = millis() - stateChangeTime;
-      printStatus();
-      delay(1000);
-    }
+  // Wait in this state to allow analog low pass filters to clear before acting on reported voltages
+  for (int i = 0; i <= 10; i++)
+  {
+    timeInState = millis() - stateChangeTime;
+    printStatus();
+    delay(1000);
+  }
   nextState = STATE_OFF;
 }
  
@@ -170,7 +164,7 @@ void loop()
       digitalWrite(crossChargingRelay,HIGH);
       digitalWrite(waitIndicator,LOW);
       digitalWrite(onIndicator,HIGH);
-      if(Vstart < Vstop && Vstart > Vhouse)
+      if(Vstart < Vstop && (Vstart - Vhouse) > Vdiff)
       {
         nextState = STATE_OFF;
       }
@@ -180,7 +174,6 @@ void loop()
       }
       break;
   }
-  
   printStatus();
   Serial.println();
   Serial.println("Press any key to change settings");
