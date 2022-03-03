@@ -83,17 +83,17 @@ void setup()
 
   if(EEPROM.read(EEPromIsSetAddress) == 1)
   {
-    Vcharge = loadFloatSetpoint(VchargeAddress,Vcharge,V_min,V_max);
-    Vstop = loadFloatSetpoint(VstopAddress,Vstop,V_min,V_max);
-    Voff = loadFloatSetpoint(VoffAddress,Voff,V_min,V_max);
-    Vdiff_start = loadFloatSetpoint(Vdiff_startAddress,Vdiff_start,Vdiff_min,Vdiff_max);
-    Vdiff_stop = loadFloatSetpoint(Vdiff_stopAddress,Vdiff_stop,Vdiff_min,Vdiff_max);
-    alpha = loadFloatSetpoint(alphaAddress,alpha,alpha_min,alpha_max);
-    delayTime_ms = loadUnsignedSetpoint(delayTimeAddress,delayTime_ms,delayTime_min,delayTime_max);
+    Vcharge = loadSetpoint(VchargeAddress,Vcharge,V_min,V_max);
+    Vstop = loadSetpoint(VstopAddress,Vstop,V_min,V_max);
+    Voff = loadSetpoint(VoffAddress,Voff,V_min,V_max);
+    Vdiff_start = loadSetpoint(Vdiff_startAddress,Vdiff_start,Vdiff_min,Vdiff_max);
+    Vdiff_stop = loadSetpoint(Vdiff_stopAddress,Vdiff_stop,Vdiff_min,Vdiff_max);
+    alpha = loadSetpoint(alphaAddress,alpha,alpha_min,alpha_max);
+    delayTime_ms = loadSetpoint(delayTimeAddress,delayTime_ms,delayTime_min,delayTime_max);
   }
   else
   {
-    EEPROM.update(EEPromIsSetAddress,1);
+    EEPROM.put(EEPromIsSetAddress,1);
     EEPROM.put(VchargeAddress,Vcharge);
     EEPROM.put(VstopAddress,Vstop);
     EEPROM.put(VoffAddress,Voff);
@@ -453,7 +453,7 @@ float readBatteryVoltage(int pin)
   return batteryVoltage;
 }
 
-float loadFloatSetpoint(unsigned int address,float oldValue, float minValue, float maxValue)
+float loadSetpoint(unsigned int address,float oldValue, float minValue, float maxValue)
 {
   float newValue;
   
@@ -474,7 +474,7 @@ float loadFloatSetpoint(unsigned int address,float oldValue, float minValue, flo
   }
 }
 
-unsigned long loadUnsignedSetpoint(unsigned int address,unsigned long oldValue, unsigned long minValue, unsigned long maxValue)
+unsigned long loadSetpoint(unsigned int address,unsigned long oldValue, unsigned long minValue, unsigned long maxValue)
 {
   unsigned long newValue;
   
