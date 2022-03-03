@@ -3,11 +3,13 @@
 // Initiate measured values to a reasonable value
 float Vstart = 12.7;
 float Vhouse = 12.7;
+float Vdiff = 0.0;
 
 // Control setpoints
 float Vcharge = 13.2; // Start cross-charging if start battery rises above this voltage
 float Vstop = 12.9; // Stop cross-charging from start battery if it falls below this voltage
-float Vdiff = 0.25; // Start cross-charging if start battery falls below house battery by this amount
+float Vdiff_start = 0.25; // Start cross-charging if (house - start) voltage exceeds this level
+float Vdiff_stop = -0.03; // Start cross-charging if (house - start) voltage falls below this level
 float Voff = 11.5; // Shut down controller if house battery falls below this voltage
 unsigned long delayTime_ms = 10000; // Wait this long after voltage rises before starting cross-charging
 
@@ -17,13 +19,17 @@ const unsigned int VchargeAddress = 4;
 const unsigned int VstopAddress = 8;
 const unsigned int VoffAddress = 12;
 const unsigned int delayTimeAddress = 16;
-const unsigned int VdiffAddress = 20;
+const unsigned int Vdiff_startAddress = 20;
+const unsigned int Vdiff_stopAddress = 24;
+const unsigned int alphaAddress = 28;
 
 // Setpoint limits
-const float Vmin = 10.0;
-const float Vmax = 15.0;
-const float Vdiff_min = 0.0;
+const float V_min = 10.0;
+const float V_max = 15.0;
+const float Vdiff_min = -3.0;
 const float Vdiff_max = 3.0;
+const float alpha_min = 0.0;
+const float alpha_max = 1.0;
 const unsigned int delayTime_min = 1000;
 const unsigned int delayTime_max = 30000;
 
@@ -34,6 +40,7 @@ const int dataEntryTimeout_ms = 10000;
 const float K_voltageScale = (100.0 / 18.0) + 1.0; // = R1/R2 + 1
 const int startVoltagePin = A1;
 const int houseVoltagePin = A0;
+float alpha = 0.1; // alpha filter; 0.1 corresponds to ~9-second time constant
 
 // Digital IO settings
 const int boardPowerRelay = 13; // relay to keep board power on
@@ -78,10 +85,12 @@ void setup()
 
   if(EEPROM.read(EEPromIsSetAddress) == 1)
   {
-    Vcharge = loadFloatSetpoint(VchargeAddress,Vcharge,Vmin,Vmax);
-    Vstop = loadFloatSetpoint(VstopAddress,Vstop,Vmin,Vmax);
-    Vstop = loadFloatSetpoint(VstopAddress,Vstop,Vmin,Vmax);
-    Vdiff = loadFloatSetpoint(VdiffAddress,Vdiff,Vdiff_min,Vdiff_max);
+    Vcharge = loadFloatSetpoint(VchargeAddress,Vcharge,V_min,V_max);
+    Vstop = loadFloatSetpoint(VstopAddress,Vstop,V_min,V_max);
+    Voff = loadFloatSetpoint(VoffAddress,Voff,V_min,V_max);
+    Vdiff_start = loadFloatSetpoint(Vdiff_startAddress,Vdiff_start,Vdiff_min,Vdiff_max);
+    Vdiff_stop = loadFloatSetpoint(Vdiff_stopAddress,Vdiff_stop,Vdiff_min,Vdiff_max);
+    alpha = loadFloatSetpoint(alphaAddress,alpha,alpha_min,alpha_max);
     delayTime_ms = loadUnsignedSetpoint(delayTimeAddress,delayTime_ms,delayTime_min,delayTime_max);
   }
   else
@@ -90,15 +99,19 @@ void setup()
     EEPROM.put(VchargeAddress,Vcharge);
     EEPROM.put(VstopAddress,Vstop);
     EEPROM.put(VoffAddress,Voff);
-    EEPROM.put(VdiffAddress,Vdiff);
+    EEPROM.put(Vdiff_startAddress,Vdiff_start);
+    EEPROM.put(Vdiff_stopAddress,Vdiff_stop);
+    EEPROM.put(alphaAddress,alpha);
     EEPROM.put(delayTimeAddress,delayTime_ms);
   }
 
   Serial.begin(115200);
-  // Wait in this state to allow analog low pass filters to clear before acting on reported voltages
+  // Wait in this state to allow low pass filters to clear before acting on reported voltages
   for (int i = 0; i <= 10; i++)
   {
     timeInState = millis() - stateChangeTime;
+    Vstart = (alpha * readBatteryVoltage(startVoltagePin)) + ((1-alpha) * Vstart);
+    Vhouse = (alpha * readBatteryVoltage(houseVoltagePin)) + ((1-alpha) * Vhouse);
     printStatus();
     delay(1000);
   }
@@ -113,8 +126,9 @@ void loop()
   }
   timeInState = millis() - stateChangeTime;
   state = nextState;
-  Vstart = readBatteryVoltage(startVoltagePin);
-  Vhouse = readBatteryVoltage(houseVoltagePin);
+  Vstart = (alpha * readBatteryVoltage(startVoltagePin)) + ((1-alpha) * Vstart);
+  Vhouse = (alpha * readBatteryVoltage(houseVoltagePin)) + ((1-alpha) * Vhouse);
+  Vdiff = Vhouse - Vstart;
 
   if(Vhouse < Voff)
   {
@@ -134,7 +148,7 @@ void loop()
       digitalWrite(crossChargingRelay,LOW);
       digitalWrite(waitIndicator,LOW);
       digitalWrite(onIndicator,LOW);
-      if(Vstart > Vcharge || (Vhouse - Vstart) > Vdiff)
+      if(Vstart > Vcharge || Vdiff > Vdiff_start)
       {
         nextState = STATE_WAIT;
       }
@@ -147,7 +161,7 @@ void loop()
       digitalWrite(crossChargingRelay,LOW);
       digitalWrite(waitIndicator,HIGH);
       digitalWrite(onIndicator,LOW);
-      if(Vstart > Vcharge || (Vhouse - Vstart) > Vdiff)
+      if(Vstart > Vcharge || Vdiff > Vdiff_start)
       {
         if (timeInState > delayTime_ms)
         {
@@ -167,7 +181,7 @@ void loop()
       digitalWrite(crossChargingRelay,HIGH);
       digitalWrite(waitIndicator,LOW);
       digitalWrite(onIndicator,HIGH);
-      if(Vstart < Vstop && (Vstart - Vhouse) > Vdiff)
+      if(Vstart < Vstop && Vdiff < Vdiff_stop)
       {
         nextState = STATE_OFF;
       }
@@ -221,13 +235,15 @@ void getUserInput()
     Serial.println("Enter 1 to change charge start voltage");
     Serial.println("Enter 2 to change charge stop voltage");
     Serial.println("Enter 3 to change low battery shutdown voltage");
-    Serial.println("Enter 4 to change differential voltage");
-    Serial.println("Enter 5 to change charging delay time");
-    Serial.println("Enter 6 to restore default settings");
-    Serial.println("Enter 7 to enter data logging mode");
+    Serial.println("Enter 4 to change differential start voltage");
+    Serial.println("Enter 5 to change differential stop voltage");
+    Serial.println("Enter 6 to change voltage filter alpha");
+    Serial.println("Enter 7 to change charging delay time");
+    Serial.println("Enter 8 to restore default settings");
+    Serial.println("Enter 9 to enter data logging mode");
     Serial.println("Enter 0 to cancel");
 
-    int menuOption = readSerialNumberInput(0,0,7,false);
+    int menuOption = readSerialNumberInput(0,0,9,false);
 
     switch(menuOption)
     {
@@ -236,29 +252,40 @@ void getUserInput()
         break;
       case 1:
         Serial.println("Enter new charge start voltage");
-        Vcharge = readSerialNumberInput(Vcharge,Vmin,Vmax,true);
+        Vcharge = readSerialNumberInput(Vcharge,V_min,V_max,true);
         EEPROM.put(VchargeAddress,Vcharge);
         break;
       case 2:
         Serial.println("Enter new charge stop voltage");
-        Vstop = readSerialNumberInput(Vstop,Vmin,Vmax,true);
+        Vstop = readSerialNumberInput(Vstop,V_min,V_max,true);
         EEPROM.put(VstopAddress,Vstop);
         break;
       case 3:
         Serial.println("Enter new low battery shutdown voltage");
-        Voff = readSerialNumberInput(Voff,Vmin,Vmax,true);
+        Voff = readSerialNumberInput(Voff,V_min,V_max,true);
         EEPROM.put(VoffAddress,Voff);
+        break;
       case 4:
-        Serial.println("Enter new differential voltage");
-        Voff = readSerialNumberInput(Vdiff,Vdiff_min,Vdiff_max,true);
-        EEPROM.put(VdiffAddress,Vdiff);
+        Serial.println("Enter new differential start voltage");
+        Vdiff_start = readSerialNumberInput(Vdiff_start,Vdiff_min,Vdiff_max,true);
+        EEPROM.put(Vdiff_startAddress,Vdiff_start);
         break;
       case 5:
+        Serial.println("Enter new differential stop voltage");
+        Vdiff_stop = readSerialNumberInput(Vdiff_stop,Vdiff_min,Vdiff_max,true);
+        EEPROM.put(Vdiff_stopAddress,Vdiff_stop);
+        break;
+      case 6:
+        Serial.println("Enter new filter alpha");
+        alpha = readSerialNumberInput(alpha,alpha_min,alpha_max,true);
+        EEPROM.put(alphaAddress,alpha);
+        break;
+      case 7:
         Serial.println("Enter new charging delay time");
         delayTime_ms = readSerialNumberInput(delayTime_ms,delayTime_min,delayTime_max,true);
         EEPROM.put(delayTimeAddress,delayTime_ms);
         break;
-      case 6:
+      case 8:
         Serial.println("Enter 123456 to restore default settings");
         if (readSerialNumberInput(0,123456,123456,false) == 123456)
         {
@@ -267,7 +294,7 @@ void getUserInput()
           delay(2000);
         }
         break;
-      case 7:
+      case 9:
 			  dataLoggingMode = true;
 
         clearScreen();
@@ -320,8 +347,12 @@ void printStatus()
   Serial.println(Vstop);
   Serial.print("Low battery shutdown voltage  = ");
   Serial.println(Voff);
-  Serial.print("Charge start differential voltage  = ");
-  Serial.println(Vdiff);
+  Serial.print("Charge start diff voltage     = ");
+  Serial.println(Vdiff_start);
+  Serial.print("Charge stop diff voltage      = ");
+  Serial.println(Vdiff_stop);
+  Serial.print("Voltage filter alpha          = ");
+  Serial.println(alpha);
   Serial.print("Charging delay time (ms)      = ");
   Serial.println(delayTime_ms);
 }
@@ -425,7 +456,7 @@ float loadFloatSetpoint(unsigned int address,float oldValue, float minValue, flo
   
   EEPROM.get(address,newValue);
 
-  if(newValue > maxValue || newValue < minValue)
+  if(newValue > maxValue || newValue < minValue || isnan(newValue))
   {
 	  Serial.print("Out-of-range value at EEPROM address ");
 	  Serial.print(address);
