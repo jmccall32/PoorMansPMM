@@ -14,7 +14,7 @@ float Voff = 11.5; // Shut down controller if house battery falls below this vol
 unsigned long delayTime_ms = 10000; // Wait this long after voltage rises before starting cross-charging
 
 // EEProm addresses for control setpoints
-const unsigned int EEPromIsSetAddress = 0; // This is the location of a byte (8-bit int) set to 1 if true, any other value if false (not using a bool because "clear" EEProm values can be either 0 or 255)
+const unsigned int EEPromIsSetAddress = 0; // This is the location of an integer set to 1 if true, any other value if false (not using a bool because "clear" EEProm values can be either 0 or 255)
 const unsigned int VchargeAddress = 4;
 const unsigned int VstopAddress = 8;
 const unsigned int VoffAddress = 12;
@@ -30,17 +30,17 @@ const float Vdiff_min = -3.0;
 const float Vdiff_max = 3.0;
 const float alpha_min = 0.0;
 const float alpha_max = 1.0;
-const unsigned int delayTime_min = 1000;
-const unsigned int delayTime_max = 30000;
+const unsigned long delayTime_min = 1000;
+const unsigned long delayTime_max = 360000;
 
 // Timeout when changing setpoints through serial terminal
-const int dataEntryTimeout_ms = 10000;
+const long dataEntryTimeout_ms = 10000;
 
 // Voltage input settings
 const float K_voltageScale = (100.0 / 18.0) + 1.0; // = R1/R2 + 1
 const int startVoltagePin = A1;
 const int houseVoltagePin = A0;
-float alpha = 0.1; // alpha filter; 0.1 corresponds to ~9-second time constant
+float alpha = 0.05; // alpha of discrete low-pass filter; for 1-second cycle time, this is *about* the same as the filter cutoff frequency
 
 // Digital IO settings
 const int boardPowerRelay = 13; // relay to keep board power on
@@ -50,19 +50,23 @@ const int onIndicator = 5; // indicator LED for on state
 const int D121 = 6; // 12V digital input (with 12V reed relay) #1
 const int D122 = 7; // 12V digital input (with 12V reed relay) #2
 
-// State machine variables
+// State machine constants
 const unsigned int STATE_BOOT = 0;
 const unsigned int STATE_OFF = 1;
 const unsigned int STATE_WAIT = 2;
 const unsigned int STATE_ON = 3;
 const char* stateNames[] = {"booting up","off","waiting to charge","cross-charging"};
+
+// State machine variables
 int state = STATE_BOOT;
 int nextState = STATE_BOOT;
 unsigned long stateChangeTime = 0;
 unsigned long timeInState = 0;
 
-// Acesses data logging mode in which serial monitor puts out tab delimited columnar data instead of human-friendly screens
+// Mode in which serial monitor puts out tab delimited columnar data instead of human-friendly screens
 bool dataLoggingMode = false;
+const long serialBaudRate = 115200;
+const int cycleTime_ms = 1000;
  
 void setup() 
 {
@@ -72,14 +76,8 @@ void setup()
   pinMode(crossChargingRelay,OUTPUT);
   digitalWrite(crossChargingRelay,LOW);
   
-  stateChangeTime = millis();
-  
-  // turn on both indicator LEDs as "lamp test" and to indicate bootup state
   pinMode(waitIndicator,OUTPUT);
   pinMode(onIndicator,OUTPUT);
-  digitalWrite(waitIndicator,HIGH);
-  digitalWrite(onIndicator,HIGH);
-  
   pinMode(D121,INPUT);
   pinMode(D122,INPUT);
 
@@ -105,19 +103,11 @@ void setup()
     EEPROM.put(delayTimeAddress,delayTime_ms);
   }
 
-  Serial.begin(115200);
-  // Wait in this state to allow low pass filters to clear before acting on reported voltages
-  for (int i = 0; i <= 10; i++)
-  {
-    timeInState = millis() - stateChangeTime;
-    Vstart = (alpha * readBatteryVoltage(startVoltagePin)) + ((1-alpha) * Vstart);
-    Vhouse = (alpha * readBatteryVoltage(houseVoltagePin)) + ((1-alpha) * Vhouse);
-    printStatus();
-    delay(1000);
-  }
-  nextState = STATE_OFF;
+  Serial.begin(serialBaudRate);
+  
+  stateChangeTime = millis();
 }
- 
+
 void loop() 
 {
   if(state != nextState)
@@ -130,7 +120,7 @@ void loop()
   Vhouse = (alpha * readBatteryVoltage(houseVoltagePin)) + ((1-alpha) * Vhouse);
   Vdiff = Vhouse - Vstart;
 
-  if(Vhouse < Voff)
+  if(Vhouse < Voff && state != STATE_BOOT)
   {
     Serial.println("House battery voltage critically low");
     delay(5000); // Wait to make sure it's not a short transient
@@ -144,6 +134,21 @@ void loop()
 
   switch(state)
   {
+    case STATE_BOOT:
+      // turn on both indicator LEDs as "lamp test" and to indicate bootup state
+      digitalWrite(waitIndicator,HIGH);
+      digitalWrite(onIndicator,HIGH);
+      
+      // Wait in this state to allow low pass filters to clear before acting on reported voltages
+      if (timeInState > delayTime_ms)
+      {
+        nextState = STATE_OFF;
+      }
+      else
+      {
+        nextState = STATE_BOOT;
+      }
+      break;
     case STATE_OFF:
       digitalWrite(crossChargingRelay,LOW);
       digitalWrite(waitIndicator,LOW);
@@ -201,17 +206,15 @@ void loop()
     }
     else
     {
-		  printDataLogRow();
+      printDataLogRow();
     }
   }
   else
   {
     printStatus();
-    Serial.println();
-    getUserInput();
   }
   
-  delay(1000);
+  delay(cycleTime_ms);
 }
 
 void clearScreen()
@@ -224,8 +227,55 @@ void clearScreen()
   Serial.print("[H");     // cursor to home command
 }
 
-void getUserInput()
+
+void printDataLogRow()
 {
+  Serial.print(millis());
+  Serial.print("	");
+  Serial.print(Vstart);
+  Serial.print("	");
+  Serial.print(Vhouse);
+  Serial.print("	");
+  Serial.print(state);
+  Serial.print("	");
+  Serial.println(nextState);
+}
+
+void printStatus()
+{
+  clearScreen();
+  Serial.print("Starting battery voltage      = ");
+  Serial.println(Vstart);
+  Serial.print("House battery voltage         = ");
+  Serial.println(Vhouse);
+  Serial.print("System state  = ");
+  Serial.print(state);
+  Serial.print(": ");
+  Serial.println(stateNames[state]);
+  Serial.print("Next state    = ");
+  Serial.print(nextState);
+  Serial.print(": ");
+  Serial.println(stateNames[nextState]);
+  Serial.print("Time in state (s)             = ");
+  Serial.println(timeInState/1000);
+  Serial.println();
+  Serial.print("Charge start voltage          = ");
+  Serial.println(Vcharge);
+  Serial.print("Charge stop voltage           = ");
+  Serial.println(Vstop);
+  Serial.print("Low battery shutdown voltage  = ");
+  Serial.println(Voff);
+  Serial.print("Charge start diff voltage     = ");
+  Serial.println(Vdiff_start);
+  Serial.print("Charge stop diff voltage      = ");
+  Serial.println(Vdiff_stop);
+  Serial.print("Voltage filter alpha          = ");
+  Serial.println(alpha);
+  Serial.print("Charging delay time (ms)      = ");
+  Serial.println(delayTime_ms);
+  
+  Serial.println();
+  
   Serial.println("Press any key to change settings");
 
   if(Serial.available())
@@ -295,66 +345,19 @@ void getUserInput()
         }
         break;
       case 9:
-			  dataLoggingMode = true;
+        dataLoggingMode = true;
 
         clearScreen();
         Serial.println("Entering data logging mode");
-				Serial.println("Press any key to exit");
-				Serial.println("time_ms	Vstart	Vhouse	state	nextState");
-				printDataLogRow();
+        Serial.println("Press any key to exit");
+        Serial.println("time_ms	Vstart	Vhouse	state	nextState");
+        printDataLogRow();
         break;
       default:
         Serial.println("Invalid entry");
         break;
     }
   }
-}
-
-void printDataLogRow()
-{
-	Serial.print(millis());
-	Serial.print("	");
-	Serial.print(Vstart);
-	Serial.print("	");
-	Serial.print(Vhouse);
-	Serial.print("	");
-	Serial.print(state);
-	Serial.print("	");
-	Serial.println(nextState);
-}
-
-void printStatus()
-{
-  clearScreen();
-  Serial.print("Starting battery voltage      = ");
-  Serial.println(Vstart);
-  Serial.print("House battery voltage         = ");
-  Serial.println(Vhouse);
-  Serial.print("System state  = ");
-  Serial.print(state);
-  Serial.print(": ");
-  Serial.println(stateNames[state]);
-  Serial.print("Next state    = ");
-  Serial.print(nextState);
-  Serial.print(": ");
-  Serial.println(stateNames[nextState]);
-  Serial.print("Time in state (s)             = ");
-  Serial.println(timeInState/1000);
-  Serial.println();
-  Serial.print("Charge start voltage          = ");
-  Serial.println(Vcharge);
-  Serial.print("Charge stop voltage           = ");
-  Serial.println(Vstop);
-  Serial.print("Low battery shutdown voltage  = ");
-  Serial.println(Voff);
-  Serial.print("Charge start diff voltage     = ");
-  Serial.println(Vdiff_start);
-  Serial.print("Charge stop diff voltage      = ");
-  Serial.println(Vdiff_stop);
-  Serial.print("Voltage filter alpha          = ");
-  Serial.println(alpha);
-  Serial.print("Charging delay time (ms)      = ");
-  Serial.println(delayTime_ms);
 }
 
 float readSerialNumberInput(float oldValue, float minValue, float maxValue, bool printResult)
@@ -471,20 +474,19 @@ float loadFloatSetpoint(unsigned int address,float oldValue, float minValue, flo
   }
 }
 
-unsigned int loadUnsignedSetpoint(unsigned int address,unsigned int oldValue, unsigned int minValue, unsigned int maxValue)
+unsigned long loadUnsignedSetpoint(unsigned int address,unsigned long oldValue, unsigned long minValue, unsigned long maxValue)
 {
-  unsigned int newValue;
+  unsigned long newValue;
   
   EEPROM.get(address,newValue);
 
   if(newValue > maxValue || newValue < minValue)
   {
-	  Serial.print("Out-of-range value at EEPROM address ");
-	  Serial.print(address);
-	  Serial.println(". Default value used instead.");
-	  EEPROM.put(address,oldValue);
+    Serial.print("Out-of-range value at EEPROM address ");
+    Serial.print(address);
+    Serial.println(". Default value used instead.");
+    EEPROM.put(address,oldValue);
     return oldValue;
-	
   }
   else
   {
