@@ -6,12 +6,12 @@ float Vhouse = 12.7;
 float Vdiff = 0.0;
 
 // Control setpoints
-float Vcharge = 13.2; // Start cross-charging if start battery rises above this voltage
-float Vstop = 12.9; // Stop cross-charging from start battery if it falls below this voltage
+float Vcharge = 13.3; // Start cross-charging if start battery rises above this voltage
+float Vstop = 13.0; // Stop cross-charging from start battery if it falls below this voltage
 float Vdiff_start = 0.25; // Start cross-charging if (house - start) voltage exceeds this level
 float Vdiff_stop = -0.03; // Start cross-charging if (house - start) voltage falls below this level
 float Voff = 11.5; // Shut down controller if house battery falls below this voltage
-unsigned long delayTime_ms = 10000; // Wait this long after voltage rises before starting cross-charging
+unsigned long delayTime_ms = 15000; // Wait this long after voltage rises before starting cross-charging
 
 // EEProm addresses for control setpoints
 const unsigned int EEPromIsSetAddress = 0; // This is the location of an integer set to 1 if true, any other value if false (not using a bool because "clear" EEProm values can be either 0 or 255)
@@ -53,15 +53,17 @@ const int D122 = 7; // 12V digital input (with 12V reed relay) #2
 // State machine constants
 const unsigned int STATE_BOOT = 0;
 const unsigned int STATE_OFF = 1;
-const unsigned int STATE_WAIT = 2;
+const unsigned int STATE_WAIT_CONNECT = 2;
 const unsigned int STATE_ON = 3;
-const char* stateNames[] = {"booting up","off","waiting to charge","cross-charging"};
+const unsigned int STATE_WAIT_DISCONNECT = 4;
+const char* stateNames[] = {"booting up","off","waiting to connect","cross-charging","waiting to disconnect"};
 
 // State machine variables
 int state = STATE_BOOT;
 int nextState = STATE_BOOT;
 unsigned long stateChangeTime = 0;
 unsigned long timeInState = 0;
+bool flasherState = true; // used for flashing LEDs in booting state
 
 // Mode in which serial monitor puts out tab delimited columnar data instead of human-friendly screens
 bool dataLoggingMode = false;
@@ -135,9 +137,11 @@ void loop()
   switch(state)
   {
     case STATE_BOOT:
-      // turn on both indicator LEDs as "lamp test" and to indicate bootup state
-      digitalWrite(waitIndicator,HIGH);
-      digitalWrite(onIndicator,HIGH);
+      digitalWrite(crossChargingRelay,LOW);
+      // alternately flash indicator LEDs as "lamp test" and to indicate bootup state
+      digitalWrite(waitIndicator,flasherState);
+      digitalWrite(onIndicator,!flasherState);
+      flasherState = !flasherState;
       
       // Wait in this state to allow low pass filters to clear before acting on reported voltages
       if (timeInState > delayTime_ms)
@@ -155,14 +159,14 @@ void loop()
       digitalWrite(onIndicator,LOW);
       if(Vstart > Vcharge || Vdiff > Vdiff_start)
       {
-        nextState = STATE_WAIT;
+        nextState = STATE_WAIT_CONNECT;
       }
       else
       {
         nextState = STATE_OFF;
       }
       break;
-    case STATE_WAIT:
+    case STATE_WAIT_CONNECT:
       digitalWrite(crossChargingRelay,LOW);
       digitalWrite(waitIndicator,HIGH);
       digitalWrite(onIndicator,LOW);
@@ -174,7 +178,7 @@ void loop()
         }
         else
         {
-          nextState = STATE_WAIT;
+          nextState = STATE_WAIT_CONNECT;
         }
       }
       else
@@ -188,7 +192,27 @@ void loop()
       digitalWrite(onIndicator,HIGH);
       if(Vstart < Vstop && Vdiff < Vdiff_stop)
       {
-        nextState = STATE_OFF;
+        nextState = STATE_WAIT_DISCONNECT;
+      }
+      else
+      {
+        nextState = STATE_ON;
+      }
+      break;
+    case STATE_WAIT_DISCONNECT:
+      digitalWrite(crossChargingRelay,HIGH);
+      digitalWrite(waitIndicator,HIGH);
+      digitalWrite(onIndicator,HIGH);
+      if(Vstart < Vstop && Vdiff < Vdiff_stop)
+      {
+        if (timeInState > delayTime_ms)
+        {
+          nextState = STATE_OFF;
+        }
+        else
+        {
+          nextState = STATE_WAIT_DISCONNECT;
+        }
       }
       else
       {
