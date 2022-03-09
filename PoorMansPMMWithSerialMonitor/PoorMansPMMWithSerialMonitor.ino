@@ -58,12 +58,18 @@ const unsigned int STATE_ON = 3;
 const unsigned int STATE_WAIT_DISCONNECT = 4;
 const char* stateNames[] = {"booting up","off","waiting to connect","cross-charging","waiting to disconnect"};
 
+// set this true on build to cross-charge only if an active charging source is present
+// otherwise, cross-charging occurs if start battery is being actively charged OR is at lower voltage than house battery
+const bool activeChargingOnly = false;
+
 // State machine variables
 int state = STATE_BOOT;
 int nextState = STATE_BOOT;
 unsigned long stateChangeTime = 0;
 unsigned long timeInState = 0;
 bool flasherState = true; // used for flashing LEDs
+bool readyToConnect = false; // criteria met to start cross-charging
+bool readyToDisconnect = false; // criteria met to stop cross-charging
 
 // Mode in which serial monitor puts out tab delimited columnar data instead of human-friendly screens
 bool dataLoggingMode = false;
@@ -133,6 +139,18 @@ void loop()
       delay(1000); // Wait for debouncing purposes
     }
   }
+  
+  if(activeChargingOnly)
+  {
+    
+    readyToConnect = Vstart > Vcharge || Vhouse > Vcharge;
+    readyToDisconnect = Vstart < Vstop && Vhouse < Vstop;
+  }
+  else
+  {
+    readyToConnect = Vstart > Vcharge || Vdiff > Vdiff_start;
+    readyToDisconnect = Vstart < Vstop && Vdiff < Vdiff_stop;
+  }
 
   switch(state)
   {
@@ -156,7 +174,7 @@ void loop()
       digitalWrite(crossChargingRelay,LOW);
       digitalWrite(offIndicator,HIGH);
       digitalWrite(onIndicator,LOW);
-      if(Vstart > Vcharge || Vdiff > Vdiff_start)
+      if(readyToConnect)
       {
         nextState = STATE_WAIT_CONNECT;
       }
@@ -169,7 +187,7 @@ void loop()
       digitalWrite(crossChargingRelay,LOW);
       digitalWrite(offIndicator,HIGH);
       digitalWrite(onIndicator,flasherState);
-      if(Vstart > Vcharge || Vdiff > Vdiff_start)
+      if(readyToConnect)
       {
         if (timeInState >= delayTime_ms)
         {
@@ -189,7 +207,7 @@ void loop()
       digitalWrite(crossChargingRelay,HIGH);
       digitalWrite(offIndicator,LOW);
       digitalWrite(onIndicator,HIGH);
-      if(Vstart < Vstop && Vdiff < Vdiff_stop)
+      if(readyToDisconnect)
       {
         nextState = STATE_WAIT_DISCONNECT;
       }
@@ -202,7 +220,7 @@ void loop()
       digitalWrite(crossChargingRelay,HIGH);
       digitalWrite(offIndicator,flasherState);
       digitalWrite(onIndicator,HIGH);
-      if(Vstart < Vstop && Vdiff < Vdiff_stop)
+      if(readyToDisconnect)
       {
         if (timeInState >= delayTime_ms)
         {
