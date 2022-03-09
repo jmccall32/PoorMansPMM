@@ -45,7 +45,7 @@ float alpha = 0.05; // alpha of discrete low-pass filter; for 1-second cycle tim
 // Digital IO settings
 const int boardPowerRelay = 13; // relay to keep board power on
 const int crossChargingRelay = 12; // pilot relay for off-board cross charging solenoid
-const int waitIndicator = 4; // indicator LED for wait state
+const int offIndicator = 4; // indicator LED for off state
 const int onIndicator = 5; // indicator LED for on state
 const int D121 = 6; // 12V digital input (with 12V reed relay) #1
 const int D122 = 7; // 12V digital input (with 12V reed relay) #2
@@ -63,7 +63,7 @@ int state = STATE_BOOT;
 int nextState = STATE_BOOT;
 unsigned long stateChangeTime = 0;
 unsigned long timeInState = 0;
-bool flasherState = true; // used for flashing LEDs in booting state
+bool flasherState = true; // used for flashing LEDs
 
 // Mode in which serial monitor puts out tab delimited columnar data instead of human-friendly screens
 bool dataLoggingMode = false;
@@ -78,7 +78,7 @@ void setup()
   pinMode(crossChargingRelay,OUTPUT);
   digitalWrite(crossChargingRelay,LOW);
   
-  pinMode(waitIndicator,OUTPUT);
+  pinMode(offIndicator,OUTPUT);
   pinMode(onIndicator,OUTPUT);
   pinMode(D121,INPUT);
   pinMode(D122,INPUT);
@@ -139,9 +139,8 @@ void loop()
     case STATE_BOOT:
       digitalWrite(crossChargingRelay,LOW);
       // alternately flash indicator LEDs as "lamp test" and to indicate bootup state
-      digitalWrite(waitIndicator,flasherState);
+      digitalWrite(offIndicator,flasherState);
       digitalWrite(onIndicator,!flasherState);
-      flasherState = !flasherState;
       
       // Wait in this state to allow low pass filters to clear before acting on reported voltages
       if (timeInState > delayTime_ms)
@@ -155,7 +154,7 @@ void loop()
       break;
     case STATE_OFF:
       digitalWrite(crossChargingRelay,LOW);
-      digitalWrite(waitIndicator,LOW);
+      digitalWrite(offIndicator,HIGH);
       digitalWrite(onIndicator,LOW);
       if(Vstart > Vcharge || Vdiff > Vdiff_start)
       {
@@ -168,11 +167,11 @@ void loop()
       break;
     case STATE_WAIT_CONNECT:
       digitalWrite(crossChargingRelay,LOW);
-      digitalWrite(waitIndicator,HIGH);
-      digitalWrite(onIndicator,LOW);
+      digitalWrite(offIndicator,HIGH);
+      digitalWrite(onIndicator,flasherState);
       if(Vstart > Vcharge || Vdiff > Vdiff_start)
       {
-        if (timeInState > delayTime_ms)
+        if (timeInState >= delayTime_ms)
         {
           nextState = STATE_ON;
         }
@@ -188,7 +187,7 @@ void loop()
       break;
     case STATE_ON:
       digitalWrite(crossChargingRelay,HIGH);
-      digitalWrite(waitIndicator,LOW);
+      digitalWrite(offIndicator,LOW);
       digitalWrite(onIndicator,HIGH);
       if(Vstart < Vstop && Vdiff < Vdiff_stop)
       {
@@ -201,11 +200,11 @@ void loop()
       break;
     case STATE_WAIT_DISCONNECT:
       digitalWrite(crossChargingRelay,HIGH);
-      digitalWrite(waitIndicator,HIGH);
+      digitalWrite(offIndicator,flasherState);
       digitalWrite(onIndicator,HIGH);
       if(Vstart < Vstop && Vdiff < Vdiff_stop)
       {
-        if (timeInState > delayTime_ms)
+        if (timeInState >= delayTime_ms)
         {
           nextState = STATE_OFF;
         }
@@ -238,6 +237,7 @@ void loop()
     printStatus();
   }
   
+  flasherState = !flasherState;
   delay(cycleTime_ms);
 }
 
