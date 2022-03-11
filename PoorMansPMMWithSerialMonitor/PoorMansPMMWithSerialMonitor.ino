@@ -8,8 +8,8 @@ float Vdiff = 0.0;
 // Control setpoints
 float Vcharge = 13.3; // Start cross-charging if start battery rises above this voltage
 float Vstop = 13.0; // Stop cross-charging from start battery if it falls below this voltage
-float Vdiff_start = 0.25; // Start cross-charging if (house - start) voltage exceeds this level
-float Vdiff_stop = -0.03; // Start cross-charging if (house - start) voltage falls below this level
+float Vdiff_start = 0.30; // Start cross-charging if (house - start) voltage exceeds this level
+float Vdiff_stop = -0.04; // Start cross-charging if (house - start) voltage falls below this level
 float Voff = 11.5; // Shut down controller if house battery falls below this voltage
 unsigned long delayTime_ms = 15000; // Wait this long after voltage rises before starting cross-charging
 
@@ -58,9 +58,8 @@ const unsigned int STATE_ON = 3;
 const unsigned int STATE_WAIT_DISCONNECT = 4;
 const char* stateNames[] = {"booting up","off","waiting to connect","cross-charging","waiting to disconnect"};
 
-// set this true on build to cross-charge only if an active charging source is present
-// otherwise, cross-charging occurs if start battery is being actively charged OR is at lower voltage than house battery
-const bool activeChargingOnly = false;
+// set this true on build to cross-charge if start battery at lower voltage than house battery, even if house battery isn't being charged
+const bool crossChargeToStart = true;
 
 // State machine variables
 int state = STATE_BOOT;
@@ -140,16 +139,13 @@ void loop()
     }
   }
   
-  if(activeChargingOnly)
+  readyToConnect = Vstart > Vcharge || Vhouse > Vcharge;
+  readyToDisconnect = Vstart < Vstop && Vhouse < Vstop;
+  
+  if(crossChargeToStart)
   {
-    
-    readyToConnect = Vstart > Vcharge || Vhouse > Vcharge;
-    readyToDisconnect = Vstart < Vstop && Vhouse < Vstop;
-  }
-  else
-  {
-    readyToConnect = Vstart > Vcharge || Vdiff > Vdiff_start;
-    readyToDisconnect = Vstart < Vstop && Vdiff < Vdiff_stop;
+    readyToConnect = readyToConnect || Vdiff > Vdiff_start;
+    readyToDisconnect = readyToDisconnect && Vdiff < Vdiff_stop;
   }
 
   switch(state)
