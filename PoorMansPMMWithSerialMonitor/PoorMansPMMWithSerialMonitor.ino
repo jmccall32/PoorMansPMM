@@ -66,13 +66,15 @@ int state = STATE_BOOT;
 int nextState = STATE_BOOT;
 unsigned long stateChangeTime = 0;
 unsigned long timeInState = 0;
+unsigned long cycleStartTime = 0;
+unsigned long thisCycleTime = 0;
 bool flasherState = true; // used for flashing LEDs
 bool readyToConnect = false; // criteria met to start cross-charging
 bool readyToDisconnect = false; // criteria met to stop cross-charging
 
 // Mode in which serial monitor puts out tab delimited columnar data instead of human-friendly screens
 bool dataLoggingMode = false;
-const long serialBaudRate = 115200;
+const long serialBaudRate = 9600;
 const int cycleTime_ms = 1000;
  
 void setup() 
@@ -117,6 +119,7 @@ void setup()
 
 void loop() 
 {
+  cycleStartTime = millis();
   if(state != nextState)
   {
     stateChangeTime = millis();
@@ -240,6 +243,7 @@ void loop()
     {
       dataLoggingMode = false;
       clearSerialBuffer();
+      clearScreen();
     }
     else
     {
@@ -252,7 +256,12 @@ void loop()
   }
   
   flasherState = !flasherState;
-  delay(cycleTime_ms);
+
+  thisCycleTime = millis() - cycleStartTime;
+  if(thisCycleTime < cycleTime_ms)
+  {
+    delay(cycleTime_ms - thisCycleTime);
+  }
 }
 
 void clearScreen()
@@ -261,6 +270,12 @@ void clearScreen()
   // Works well with "real" terminal program (e.g. PuTTY or Tera Term) but not the Arduino IDE serial monitor
   Serial.write(27);       // ESC command
   Serial.print("[2J");    // clear screen command
+  Serial.write(27);
+  Serial.print("[H");     // cursor to home command
+}
+
+void sendCursorHome()
+{
   Serial.write(27);
   Serial.print("[H");     // cursor to home command
 }
@@ -281,7 +296,7 @@ void printDataLogRow()
 
 void printStatus()
 {
-  clearScreen();
+  sendCursorHome();
   Serial.print("Starting battery voltage      = ");
   Serial.println(Vstart);
   Serial.print("House battery voltage         = ");
@@ -337,11 +352,13 @@ void printStatus()
     {
       case 0:
         Serial.println("Cancelled");
+        clearScreen();
         break;
       case 1:
         Serial.println("Enter new charge start voltage");
         Vcharge = readSerialNumberInput(Vcharge,V_min,V_max,true);
         EEPROM.put(VchargeAddress,Vcharge);
+        clearScreen();
         break;
       case 2:
         Serial.println("Enter new charge stop voltage");
@@ -352,26 +369,31 @@ void printStatus()
         Serial.println("Enter new low battery shutdown voltage");
         Voff = readSerialNumberInput(Voff,V_min,V_max,true);
         EEPROM.put(VoffAddress,Voff);
+        clearScreen();
         break;
       case 4:
         Serial.println("Enter new differential start voltage");
         Vdiff_start = readSerialNumberInput(Vdiff_start,Vdiff_min,Vdiff_max,true);
         EEPROM.put(Vdiff_startAddress,Vdiff_start);
+        clearScreen();
         break;
       case 5:
         Serial.println("Enter new differential stop voltage");
         Vdiff_stop = readSerialNumberInput(Vdiff_stop,Vdiff_min,Vdiff_max,true);
         EEPROM.put(Vdiff_stopAddress,Vdiff_stop);
+        clearScreen();
         break;
       case 6:
         Serial.println("Enter new filter alpha");
         alpha = readSerialNumberInput(alpha,alpha_min,alpha_max,true);
         EEPROM.put(alphaAddress,alpha);
+        clearScreen();
         break;
       case 7:
         Serial.println("Enter new charging delay time");
         delayTime_ms = readSerialNumberInput(delayTime_ms,delayTime_min,delayTime_max,true);
         EEPROM.put(delayTimeAddress,delayTime_ms);
+        clearScreen();
         break;
       case 8:
         Serial.println("Enter 123456 to restore default settings");
@@ -381,6 +403,7 @@ void printStatus()
           Serial.println("Default settings will be restored on next board reset");
           delay(2000);
         }
+        clearScreen();
         break;
       case 9:
         dataLoggingMode = true;
