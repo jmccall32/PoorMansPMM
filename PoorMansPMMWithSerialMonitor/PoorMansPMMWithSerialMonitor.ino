@@ -283,7 +283,7 @@ void sendCursorHome()
 
 void printDataLogRow()
 {
-  Serial.print(millis());
+  Serial.print(cycleEndTime);
   Serial.print("	");
   Serial.print(Vstart);
   Serial.print("	");
@@ -412,7 +412,7 @@ void printStatus()
         Serial.println("Entering data logging mode");
         Serial.println("Press any key to exit");
         Serial.println("time_ms	Vstart	Vhouse	state	nextState");
-        printDataLogRow();
+        // printDataLogRow();
         break;
       default:
         Serial.println("Invalid entry");
