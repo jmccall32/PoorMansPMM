@@ -67,8 +67,7 @@ int state = STATE_BOOT;
 int nextState = STATE_BOOT;
 unsigned long stateChangeTime = 0;
 unsigned long timeInState = 0;
-unsigned long cycleStartTime = 0;
-unsigned long thisCycleTime = 0;
+unsigned long cycleEndTime = 0;
 bool flasherState = true; // used for flashing LEDs
 bool readyToConnect = false; // criteria met to start cross-charging
 bool readyToDisconnect = false; // criteria met to stop cross-charging
@@ -116,11 +115,12 @@ void setup()
   Serial.begin(serialBaudRate);
   
   stateChangeTime = millis();
+  cycleEndTime = millis();
 }
 
 void loop() 
 {
-  cycleStartTime = millis();
+  cycleEndTime += cycleTime_ms;
   if(state != nextState)
   {
     stateChangeTime = millis();
@@ -258,11 +258,9 @@ void loop()
   }
   
   flasherState = !flasherState;
-
-  thisCycleTime = millis() - cycleStartTime;
-  if(thisCycleTime < cycleTime_ms)
+  
+  while(millis() < cycleEndTime)
   {
-    delay(cycleTime_ms - thisCycleTime);
   }
 }
 
