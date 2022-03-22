@@ -84,7 +84,7 @@ bool readyToDisconnect = false; // criteria met to stop cross-charging
 
 // Mode in which serial monitor puts out tab delimited columnar data instead of human-friendly screens
 bool dataLoggingMode = false;
-const long serialBaudRate = 9600;
+const long serialBaudRate = 19200;
 const int cycleTime_ms = 1000;
  
 void setup() 
