@@ -86,6 +86,7 @@ bool readyToDisconnect = false; // criteria met to stop cross-charging
 bool dataLoggingMode = false;
 const long serialBaudRate = 19200;
 const int cycleTime_ms = 1000;
+long cycleStartTime = 0;
  
 void setup() 
 {
@@ -130,12 +131,17 @@ void setup()
 
 void loop() 
 {
-  cycleEndTime += cycleTime_ms;
+  cycleStartTime = millis();
+  cycleEndTime = cycleStartTime + cycleTime_ms;
   if(currentState != nextState)
   {
-    stateChangeTime = millis();
+    stateChangeTime = cycleStartTime;
+    if(!dataLoggingMode)
+    {
+      clearScreen();
+    }
   }
-  timeInState = millis() - stateChangeTime;
+  timeInState = cycleStartTime - stateChangeTime;
   currentState = nextState;
   Vstart = (alpha * readBatteryVoltage(startVoltagePin)) + ((1-alpha) * Vstart);
   Vhouse = (alpha * readBatteryVoltage(houseVoltagePin)) + ((1-alpha) * Vhouse);
