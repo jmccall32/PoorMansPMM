@@ -124,6 +124,7 @@ void setup()
   }
 
   Serial.begin(serialBaudRate);
+  clearScreen();
   
   stateChangeTime = millis();
   cycleEndTime = millis();
