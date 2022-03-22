@@ -33,9 +33,6 @@ const float alpha_max = 1.0;
 const unsigned long delayTime_min = 1000;
 const unsigned long delayTime_max = 360000;
 
-// Timeout when changing setpoints through serial terminal
-const long dataEntryTimeout_ms = 10000;
-
 // Voltage input settings
 const float K_voltageScale = (100.0 / 18.0) + 1.0; // = R1/R2 + 1
 const int startVoltagePin = A1;
@@ -82,9 +79,12 @@ bool flasherState = true; // used for flashing LEDs
 bool readyToConnect = false; // criteria met to start cross-charging
 bool readyToDisconnect = false; // criteria met to stop cross-charging
 
-// Mode in which serial monitor puts out tab delimited columnar data instead of human-friendly screens
-bool dataLoggingMode = false;
+// Values for serial monitor
+const long dataEntryTimeout_ms = 10000; // Timeout when changing setpoints through serial terminal
+bool dataLoggingMode = false; // Prints tab delimited columnar data instead of human-friendly screens
 const long serialBaudRate = 19200;
+
+// Values for cycle timing
 const int cycleTime_ms = 1000;
 long cycleStartTime = 0;
  
@@ -127,7 +127,6 @@ void setup()
   clearScreen();
   
   stateChangeTime = millis();
-  cycleEndTime = millis();
 }
 
 void loop() 
