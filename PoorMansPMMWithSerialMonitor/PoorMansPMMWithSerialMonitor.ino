@@ -64,13 +64,13 @@ const char* stateNames[] =
   "   waiting to connect",
   "       cross-charging",
   "waiting to disconnect"
-  };
+};
 
 // set this true on build to cross-charge if start battery at lower voltage than house battery, even if house battery isn't being charged
 const bool crossChargeToStart = true;
 
 // State machine variables
-int state = STATE_BOOT;
+int currentState = STATE_BOOT;
 int nextState = STATE_BOOT;
 unsigned long stateChangeTime = 0;
 unsigned long timeInState = 0;
@@ -128,17 +128,17 @@ void setup()
 void loop() 
 {
   cycleEndTime += cycleTime_ms;
-  if(state != nextState)
+  if(currentState != nextState)
   {
     stateChangeTime = millis();
   }
   timeInState = millis() - stateChangeTime;
-  state = nextState;
+  currentState = nextState;
   Vstart = (alpha * readBatteryVoltage(startVoltagePin)) + ((1-alpha) * Vstart);
   Vhouse = (alpha * readBatteryVoltage(houseVoltagePin)) + ((1-alpha) * Vhouse);
   Vdiff = Vhouse - Vstart;
 
-  if(Vhouse < Voff && state != STATE_BOOT)
+  if(Vhouse < Voff && currentState != STATE_BOOT)
   {
     Serial.println("House battery voltage critically low");
     delay(5000); // Wait to make sure it's not a short transient
@@ -159,7 +159,7 @@ void loop()
     readyToDisconnect = readyToDisconnect && Vdiff < Vdiff_stop;
   }
 
-  switch(state)
+  switch(currentState)
   {
     case STATE_BOOT:
       digitalWrite(crossChargingRelay,LOW);
@@ -167,7 +167,7 @@ void loop()
       digitalWrite(offIndicator,flasherState);
       digitalWrite(onIndicator,!flasherState);
       
-      // Wait in this state to allow low pass filters to clear before acting on reported voltages
+      // Wait in "booting" state to allow low pass filters to clear before acting on reported voltages
       if (timeInState > delayTime_ms)
       {
         nextState = STATE_OFF;
@@ -296,7 +296,7 @@ void printDataLogRow()
   Serial.print("	");
   Serial.print(Vhouse);
   Serial.print("	");
-  Serial.print(state);
+  Serial.print(currentState);
   Serial.print("	");
   Serial.println(nextState);
 }
@@ -309,14 +309,14 @@ void printStatus()
   Serial.print("House battery voltage         = ");
   Serial.println(Vhouse);
   Serial.print("System state  = ");
-  Serial.print(state);
+  Serial.print(currentState);
   Serial.print(": ");
-  Serial.println(stateNames[state]);
+  Serial.println(stateNames[currentState]);
   Serial.print("Next state    = ");
   Serial.print(nextState);
   Serial.print(": ");
   Serial.println(stateNames[nextState]);
-  Serial.print("Time in state (s)             = ");
+  Serial.print("Time in current state (s)     = ");
   Serial.println(timeInState/1000);
   Serial.println();
   Serial.print("Charge start voltage          = ");
