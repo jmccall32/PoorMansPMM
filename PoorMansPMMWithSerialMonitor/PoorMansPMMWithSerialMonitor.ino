@@ -51,18 +51,21 @@ const int D121 = 6; // 12V digital input (with 12V reed relay) #1
 const int D122 = 7; // 12V digital input (with 12V reed relay) #2
 
 // State machine constants
-const unsigned int STATE_BOOT = 0;
-const unsigned int STATE_OFF = 1;
-const unsigned int STATE_WAIT_CONNECT = 2;
-const unsigned int STATE_ON = 3;
-const unsigned int STATE_WAIT_DISCONNECT = 4;
-// Pad all state names to equal length with leading spaces
+enum state
+{
+  STATE_BOOT,
+  STATE_OFF,
+  STATE_WAIT_CONNECT,
+  STATE_ON,
+  STATE_WAIT_DISCONNECT
+};
+// Pad all state names to equal length with trailing spaces
 const char* stateNames[] = 
 {
-  "           booting up",
-  "                  off",
-  "   waiting to connect",
-  "       cross-charging",
+  "booting up           ",
+  "off                  ",
+  "waiting to connect   ",
+  "cross-charging       ",
   "waiting to disconnect"
 };
 
@@ -70,8 +73,8 @@ const char* stateNames[] =
 const bool crossChargeToStart = true;
 
 // State machine variables
-int currentState = STATE_BOOT;
-int nextState = STATE_BOOT;
+state currentState = STATE_BOOT;
+state nextState = STATE_BOOT;
 unsigned long stateChangeTime = 0;
 unsigned long timeInState = 0;
 unsigned long cycleEndTime = 0;
