@@ -57,7 +57,14 @@ const unsigned int STATE_WAIT_CONNECT = 2;
 const unsigned int STATE_ON = 3;
 const unsigned int STATE_WAIT_DISCONNECT = 4;
 // Pad all state names to equal length with leading spaces
-const char* stateNames[] = {"           booting up","                  off","   waiting to connect","       cross-charging","waiting to disconnect"};
+const char* stateNames[] = 
+{
+  "           booting up",
+  "                  off",
+  "   waiting to connect",
+  "       cross-charging",
+  "waiting to disconnect"
+  };
 
 // set this true on build to cross-charge if start battery at lower voltage than house battery, even if house battery isn't being charged
 const bool crossChargeToStart = true;
@@ -412,7 +419,6 @@ void printStatus()
         Serial.println("Entering data logging mode");
         Serial.println("Press any key to exit");
         Serial.println("time_ms	Vstart	Vhouse	state	nextState");
-        // printDataLogRow();
         break;
       default:
         Serial.println("Invalid entry");
